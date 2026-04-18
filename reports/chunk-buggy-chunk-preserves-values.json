@@ -1,0 +1,267 @@
+{
+  "title": "Chunk preserves values",
+  "description": "Flattening chunk output should reproduce the original list without dropping the tail.",
+  "modulePath": "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/chunk-buggy.js",
+  "propertiesPath": "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/chunk.properties.js",
+  "generatedAt": "2026-04-18T20:33:11.157Z",
+  "cases": [
+    {
+      "id": "chunk-preserves-values",
+      "label": "Chunk preserves all values",
+      "description": "The chunked output should keep every original value in order.",
+      "functionName": "chunk",
+      "invariant": "flatten(chunk(values, size)) should equal the original values",
+      "status": "fail",
+      "seed": 87492311,
+      "numRuns": 1,
+      "numShrinks": 2,
+      "counterexamplePath": "0:0:0",
+      "modulePath": "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/chunk-buggy.js",
+      "propertiesPath": "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/chunk.properties.js",
+      "rerunCommand": "npm run studio -- run --module '/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/chunk-buggy.js' --properties '/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/chunk.properties.js' --case 'chunk-preserves-values' --seed 87492311 --path '0:0:0'",
+      "failingInput": {
+        "json": {
+          "values": [
+            0
+          ],
+          "size": 2
+        },
+        "preview": "{\n  \"values\": [\n    0\n  ],\n  \"size\": 2\n}"
+      },
+      "inputArguments": [
+        {
+          "json": [
+            0
+          ],
+          "preview": "[\n  0\n]"
+        },
+        {
+          "json": 2,
+          "preview": "2"
+        }
+      ],
+      "expected": {
+        "label": "Original values",
+        "value": {
+          "json": [
+            0
+          ],
+          "preview": "[\n  0\n]"
+        }
+      },
+      "actual": {
+        "label": "Flattened chunks",
+        "value": {
+          "json": [],
+          "preview": "[]"
+        }
+      },
+      "shrinkTrace": [
+        {
+          "step": 0,
+          "label": "Shrunk failing case",
+          "input": {
+            "json": {
+              "values": [
+                1,
+                2,
+                3
+              ],
+              "size": 2
+            },
+            "preview": "{\n  \"values\": [\n    1,\n    2,\n    3\n  ],\n  \"size\": 2\n}"
+          },
+          "arguments": [
+            {
+              "json": [
+                1,
+                2,
+                3
+              ],
+              "preview": "[\n  1,\n  2,\n  3\n]"
+            },
+            {
+              "json": 2,
+              "preview": "2"
+            }
+          ],
+          "expected": {
+            "label": "Original values",
+            "value": {
+              "json": [
+                1,
+                2,
+                3
+              ],
+              "preview": "[\n  1,\n  2,\n  3\n]"
+            }
+          },
+          "actual": {
+            "label": "Flattened chunks",
+            "value": {
+              "json": [
+                1,
+                2
+              ],
+              "preview": "[\n  1,\n  2\n]"
+            }
+          },
+          "notes": []
+        },
+        {
+          "step": 1,
+          "label": "Shrunk failing case",
+          "input": {
+            "json": {
+              "values": [
+                3
+              ],
+              "size": 2
+            },
+            "preview": "{\n  \"values\": [\n    3\n  ],\n  \"size\": 2\n}"
+          },
+          "arguments": [
+            {
+              "json": [
+                3
+              ],
+              "preview": "[\n  3\n]"
+            },
+            {
+              "json": 2,
+              "preview": "2"
+            }
+          ],
+          "expected": {
+            "label": "Original values",
+            "value": {
+              "json": [
+                3
+              ],
+              "preview": "[\n  3\n]"
+            }
+          },
+          "actual": {
+            "label": "Flattened chunks",
+            "value": {
+              "json": [],
+              "preview": "[]"
+            }
+          },
+          "notes": []
+        },
+        {
+          "step": 2,
+          "label": "Minimal counterexample",
+          "input": {
+            "json": {
+              "values": [
+                0
+              ],
+              "size": 2
+            },
+            "preview": "{\n  \"values\": [\n    0\n  ],\n  \"size\": 2\n}"
+          },
+          "arguments": [
+            {
+              "json": [
+                0
+              ],
+              "preview": "[\n  0\n]"
+            },
+            {
+              "json": 2,
+              "preview": "2"
+            }
+          ],
+          "expected": {
+            "label": "Original values",
+            "value": {
+              "json": [
+                0
+              ],
+              "preview": "[\n  0\n]"
+            }
+          },
+          "actual": {
+            "label": "Flattened chunks",
+            "value": {
+              "json": [],
+              "preview": "[]"
+            }
+          },
+          "notes": []
+        }
+      ],
+      "searchTrace": [
+        {
+          "status": "failure",
+          "value": {
+            "json": [
+              {
+                "values": [
+                  1,
+                  2,
+                  3
+                ],
+                "size": 2
+              }
+            ],
+            "preview": "[\n  {\n    \"values\": [\n      1,\n      2,\n      3\n    ],\n    \"size\": 2\n  }\n]"
+          },
+          "children": [
+            {
+              "status": "failure",
+              "value": {
+                "json": [
+                  {
+                    "values": [
+                      3
+                    ],
+                    "size": 2
+                  }
+                ],
+                "preview": "[\n  {\n    \"values\": [\n      3\n    ],\n    \"size\": 2\n  }\n]"
+              },
+              "children": [
+                {
+                  "status": "failure",
+                  "value": {
+                    "json": [
+                      {
+                        "values": [
+                          0
+                        ],
+                        "size": 2
+                      }
+                    ],
+                    "preview": "[\n  {\n    \"values\": [\n      0\n    ],\n    \"size\": 2\n  }\n]"
+                  },
+                  "children": [
+                    {
+                      "status": "success",
+                      "value": {
+                        "json": [
+                          {
+                            "values": [
+                              0
+                            ],
+                            "size": 1
+                          }
+                        ],
+                        "preview": "[\n  {\n    \"values\": [\n      0\n    ],\n    \"size\": 1\n  }\n]"
+                      },
+                      "children": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "reproductionSnippet": "import * as targetModule from \"/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/chunk-buggy.js\";\n\nconst values = [0];\nconst size = 2;\nconst actual = targetModule.chunk(values, size).flat();\nconsole.log(actual);",
+      "notes": []
+    }
+  ]
+}

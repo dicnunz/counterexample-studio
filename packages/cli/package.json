@@ -1,0 +1,21 @@
+{
+  "name": "@counterexample-studio/cli",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "counterexample-studio": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --dir src --passWithNoTests",
+    "preview:e2e": "node dist/preview-e2e.js"
+  },
+  "dependencies": {
+    "@counterexample-studio/core": "file:../core",
+    "@counterexample-studio/examples": "file:../examples",
+    "tsx": "^4.20.3"
+  }
+}

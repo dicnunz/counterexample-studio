@@ -1,0 +1,130 @@
+{
+  "title": "Binary search finds present values",
+  "description": "When the target is known to be in the sorted input, a correct binary search should return a valid index.",
+  "modulePath": "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/binary-search-buggy.js",
+  "propertiesPath": "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/binary-search.properties.js",
+  "generatedAt": "2026-04-18T20:33:11.207Z",
+  "cases": [
+    {
+      "id": "binary-search-finds-present-value",
+      "label": "Binary search returns a valid index for present values",
+      "description": "Binary search returns a valid index for present values",
+      "functionName": "binarySearch",
+      "invariant": "binarySearch(values, target) should point at the present target",
+      "status": "fail",
+      "seed": 4881,
+      "numRuns": 1,
+      "numShrinks": 0,
+      "counterexamplePath": "0",
+      "modulePath": "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/binary-search-buggy.js",
+      "propertiesPath": "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/binary-search.properties.js",
+      "rerunCommand": "npm run studio -- run --module '/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/binary-search-buggy.js' --properties '/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/binary-search.properties.js' --case 'binary-search-finds-present-value' --seed 4881 --path '0'",
+      "failingInput": {
+        "json": {
+          "values": [
+            0
+          ],
+          "targetIndex": 0
+        },
+        "preview": "{\n  \"values\": [\n    0\n  ],\n  \"targetIndex\": 0\n}"
+      },
+      "inputArguments": [
+        {
+          "json": [
+            0
+          ],
+          "preview": "[\n  0\n]"
+        },
+        {
+          "json": 0,
+          "preview": "0"
+        }
+      ],
+      "expected": {
+        "label": "Expected index contract",
+        "value": {
+          "json": {
+            "target": 0,
+            "oneOf": [
+              0
+            ]
+          },
+          "preview": "{\n  \"target\": 0,\n  \"oneOf\": [\n    0\n  ]\n}"
+        }
+      },
+      "actual": {
+        "label": "Returned index",
+        "value": {
+          "json": -1,
+          "preview": "-1"
+        }
+      },
+      "shrinkTrace": [
+        {
+          "step": 0,
+          "label": "Minimal counterexample",
+          "input": {
+            "json": {
+              "values": [
+                0
+              ],
+              "targetIndex": 0
+            },
+            "preview": "{\n  \"values\": [\n    0\n  ],\n  \"targetIndex\": 0\n}"
+          },
+          "arguments": [
+            {
+              "json": [
+                0
+              ],
+              "preview": "[\n  0\n]"
+            },
+            {
+              "json": 0,
+              "preview": "0"
+            }
+          ],
+          "expected": {
+            "label": "Expected index contract",
+            "value": {
+              "json": {
+                "target": 0,
+                "oneOf": [
+                  0
+                ]
+              },
+              "preview": "{\n  \"target\": 0,\n  \"oneOf\": [\n    0\n  ]\n}"
+            }
+          },
+          "actual": {
+            "label": "Returned index",
+            "value": {
+              "json": -1,
+              "preview": "-1"
+            }
+          },
+          "notes": []
+        }
+      ],
+      "searchTrace": [
+        {
+          "status": "failure",
+          "value": {
+            "json": [
+              {
+                "values": [
+                  0
+                ],
+                "targetIndex": 0
+              }
+            ],
+            "preview": "[\n  {\n    \"values\": [\n      0\n    ],\n    \"targetIndex\": 0\n  }\n]"
+          },
+          "children": []
+        }
+      ],
+      "reproductionSnippet": "import * as targetModule from \"/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/binary-search-buggy.js\";\n\nconst actual = targetModule.binarySearch([\n  0\n], 0);\nconsole.log(actual);",
+      "notes": []
+    }
+  ]
+}

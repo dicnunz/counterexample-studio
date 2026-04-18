@@ -1,0 +1,17 @@
+{
+  "name": "@counterexample-studio/examples",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --dir src --passWithNoTests",
+    "demo": "tsx src/demo.ts"
+  },
+  "dependencies": {
+    "@counterexample-studio/core": "file:../core",
+    "fast-check": "^4.1.1"
+  }
+}
