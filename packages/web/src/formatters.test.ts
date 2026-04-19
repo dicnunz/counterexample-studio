@@ -13,12 +13,12 @@ describe("formatters", () => {
       buildLocalPreviewCommand({
         modulePath: "./src/my target.ts",
         exportName: "subjectUnderTest",
-        propertyPath: "./src/my property.ts",
+        propertyPath: "./src/my properties.ts",
         seed: 42,
         runs: 100
       })
     ).toBe(
-      "npm run studio -- run --module './src/my target.ts' --export 'subjectUnderTest' --property './src/my property.ts' --seed 42 --runs 100"
+      "npm run studio -- run --module './src/my target.ts' --export 'subjectUnderTest' --properties './src/my properties.ts' --seed 42 --runs 100"
     );
   });
 

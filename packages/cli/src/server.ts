@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { exampleCatalog, findExample } from "@counterexample-studio/examples";
 import type { ExampleCatalogEntry } from "@counterexample-studio/examples";
 import type { SuiteRunReport } from "@counterexample-studio/core";
+import { toDisplayPath } from "./path-display.js";
 import { runRuntimeWorker } from "./runtime-client.js";
 
 interface StartServerOptions {
@@ -71,7 +72,15 @@ function sendError(response: ServerResponse, statusCode: number, message: string
   });
 }
 
-async function runExample(body: ExampleRunBody): Promise<{ example: ExampleCatalogEntry; report: SuiteRunReport }> {
+function serializeExample(example: ExampleCatalogEntry) {
+  return {
+    ...example,
+    modulePath: toDisplayPath(example.modulePath),
+    propertiesPath: toDisplayPath(example.propertiesPath)
+  };
+}
+
+async function runExample(body: ExampleRunBody): Promise<{ example: ReturnType<typeof serializeExample>; report: SuiteRunReport }> {
   const example = findExample(body.exampleId);
   const request = {
     modulePath: example.modulePath,
@@ -82,7 +91,7 @@ async function runExample(body: ExampleRunBody): Promise<{ example: ExampleCatal
   };
   const report = await runRuntimeWorker(request);
   return {
-    example,
+    example: serializeExample(example),
     report
   };
 }
@@ -119,7 +128,7 @@ export function startStudioServer(options: StartServerOptions = {}) {
       }
 
       if (request.method === "GET" && url.pathname === "/api/examples") {
-        sendJson(response, 200, { examples: exampleCatalog });
+        sendJson(response, 200, { examples: exampleCatalog.map(serializeExample) });
         return;
       }
 

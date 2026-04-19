@@ -103,14 +103,14 @@ interface SuiteSelection {
 export const defaultLocalPathDraft: LocalPathDraft = {
   modulePath: "./src/target.ts",
   exportName: "subjectUnderTest",
-  propertyPath: "./src/target.property.ts",
+  propertyPath: "./src/target.properties.ts",
   seed: 424242,
   runs: 100
 };
 
 export function createDemoStudioClient() {
   return {
-    adapterName: "Local engine over localhost",
+    adapterName: "Shared local engine",
     localPathMode: "live",
     async listBundledExamples(): Promise<readonly BundledExample[]> {
       const response = await fetchJson<ExamplesResponse>("/api/examples");
@@ -143,8 +143,8 @@ export function createDemoStudioClient() {
           response.report,
           {
             id: "local-path",
-            family: "Local path",
-            title: "Local path execution",
+            family: "Local files",
+            title: "Local file execution",
             version: "fixed",
             description: "Runs a user-provided module and property file locally.",
             target: {
@@ -153,8 +153,8 @@ export function createDemoStudioClient() {
               propertyPath: draft.propertyPath
             },
             property: {
-              name: "local-path-property",
-              summary: "Runs the property definition file against the selected local export.",
+              name: "local-files-property",
+              summary: "Runs the selected property file against the chosen local export.",
               invariantLabel: "evaluate the supplied property definition"
             },
             defaultSeed: draft.seed,
@@ -171,7 +171,7 @@ export function createDemoStudioClient() {
       } catch (error) {
         return {
           kind: "blocked",
-          adapterName: "Local engine over localhost",
+          adapterName: "Shared local engine",
           seed: draft.seed,
           runs: draft.runs,
           elapsedMs: Math.round(performance.now() - startedAt),
@@ -181,8 +181,8 @@ export function createDemoStudioClient() {
             propertyPath: draft.propertyPath
           },
           property: {
-            name: "local-path-property",
-            summary: "The local executor returned an error before a report could be produced.",
+            name: "local-files-property",
+            summary: "The local run returned an error before a report could be produced.",
             invariantLabel: "evaluate the supplied property definition"
           },
           rerunCommand: buildLocalPreviewCommand(draft),
@@ -333,7 +333,7 @@ function mapRunReport(report: ApiSuiteReport, example: BundledExample, elapsedMs
   if (caseReport.status === "pass") {
     return {
       kind: "pass",
-      adapterName: "Local engine over localhost",
+      adapterName: "Shared local engine",
       seed: caseReport.seed,
       runs: caseReport.numRuns,
       elapsedMs: Math.round(elapsedMs),
@@ -352,7 +352,7 @@ function mapRunReport(report: ApiSuiteReport, example: BundledExample, elapsedMs
 
   return {
     kind: "fail",
-    adapterName: "Local engine over localhost",
+    adapterName: "Shared local engine",
     seed: caseReport.seed,
     runs: caseReport.numRuns,
     elapsedMs: Math.round(elapsedMs),

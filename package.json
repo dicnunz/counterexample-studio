@@ -13,12 +13,14 @@
   "scripts": {
     "dev": "npm run dev --workspace @counterexample-studio/web",
     "studio": "node packages/cli/dist/index.js",
+    "playwright:install": "playwright install chromium",
     "lint": "eslint .",
     "typecheck": "npm run typecheck --workspace @counterexample-studio/core && npm run build --workspace @counterexample-studio/core && npm run typecheck --workspace @counterexample-studio/web && npm run typecheck --workspace @counterexample-studio/examples && npm run build --workspace @counterexample-studio/examples && npm run typecheck --workspace @counterexample-studio/cli",
     "test": "npm run build --workspace @counterexample-studio/core && npm run test --workspace @counterexample-studio/core && npm run build --workspace @counterexample-studio/examples && npm run test --workspace @counterexample-studio/examples && npm run test --workspace @counterexample-studio/web && npm run test --workspace @counterexample-studio/cli",
     "build": "npm run build --workspace @counterexample-studio/core && npm run build --workspace @counterexample-studio/examples && npm run build --workspace @counterexample-studio/cli && npm run build --workspace @counterexample-studio/web",
-    "e2e": "npm run build && playwright test",
-    "demo:examples": "npm run build --workspace @counterexample-studio/core && npm run build --workspace @counterexample-studio/examples && npm run demo --workspace @counterexample-studio/examples"
+    "e2e": "npm run build && npm run playwright:install && playwright test",
+    "demo:examples": "npm run build --workspace @counterexample-studio/core && npm run build --workspace @counterexample-studio/examples && npm run demo --workspace @counterexample-studio/examples",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run demo:examples && npm run e2e"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

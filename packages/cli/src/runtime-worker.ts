@@ -2,6 +2,7 @@ import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { runPropertySuite } from "@counterexample-studio/core";
 import type { PropertySuite } from "@counterexample-studio/core";
+import { toDisplayPath } from "./path-display.js";
 
 interface RuntimeWorkerRequest {
   readonly modulePath: string;
@@ -50,8 +51,8 @@ async function main() {
   const suite = (suiteModule.default ?? suiteModule.suite ?? suiteModule) as PropertySuite<Record<string, unknown>>;
   const finalSuite = request.exportName ? overrideExportName(suite, request.exportName) : suite;
   const runOptions = {
-    modulePath: resolve(request.modulePath),
-    propertiesPath: resolve(request.propertiesPath),
+    modulePath: toDisplayPath(resolve(request.modulePath)),
+    propertiesPath: toDisplayPath(resolve(request.propertiesPath)),
     commandPrefix: "npm run studio -- run",
     ...(request.caseId !== undefined ? { caseId: request.caseId } : {}),
     ...(request.seed !== undefined ? { seed: request.seed } : {}),

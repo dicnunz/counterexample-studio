@@ -2,9 +2,9 @@
 
 When the target is known to be in the sorted input, a correct binary search should return a valid index.
 
-- Generated: 2026-04-18T20:33:11.207Z
-- Module: `/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/binary-search-buggy.js`
-- Properties: `/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/binary-search.properties.js`
+- Generated: 2026-04-19T02:38:41.889Z
+- Module: `./packages/examples/dist/modules/binary-search-buggy.js`
+- Properties: `./packages/examples/dist/properties/binary-search.properties.js`
 
 ## Binary search returns a valid index for present values
 
@@ -12,7 +12,7 @@ When the target is known to be in the sorted input, a correct binary search shou
 - Function: `binarySearch`
 - Seed: `4881`
 - Counterexample path: `0`
-- Rerun: `npm run studio -- run --module '/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/binary-search-buggy.js' --properties '/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/binary-search.properties.js' --case 'binary-search-finds-present-value' --seed 4881 --path '0'`
+- Rerun: `npm run studio -- run --module './packages/examples/dist/modules/binary-search-buggy.js' --properties './packages/examples/dist/properties/binary-search.properties.js' --case 'binary-search-finds-present-value' --seed 4881 --path '0'`
 
 Binary search returns a valid index for present values
 
@@ -55,7 +55,7 @@ binarySearch(values, target) should point at the present target
 ### Minimal Reproduction
 
 ```ts
-import * as targetModule from "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/binary-search-buggy.js";
+import * as targetModule from "./packages/examples/dist/modules/binary-search-buggy.js";
 
 const actual = targetModule.binarySearch([
   0

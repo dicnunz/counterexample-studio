@@ -148,11 +148,10 @@ export function App() {
         </div>
 
         <div className="adapter-card">
-          <p className="adapter-label">Current web client</p>
+          <p className="adapter-label">Execution engine</p>
           <strong>{client.adapterName}</strong>
           <p>
-            Bundled examples and local-path requests both execute through the same localhost
-            engine.
+            Bundled examples and your own files both execute through the same localhost engine.
           </p>
         </div>
       </header>
@@ -162,7 +161,7 @@ export function App() {
           <Panel
             eyebrow="Workspace"
             title="Run source"
-            description="Switch between bundled walkthroughs and the local-path adapter seam."
+            description="Switch between bundled walkthroughs and your own module plus property files."
           >
             <div className="mode-switch" role="tablist" aria-label="Run source">
               <button
@@ -310,8 +309,8 @@ export function App() {
             <>
               <Panel
                 eyebrow="Local execution"
-                title="Local-path request"
-                description="Point the workbench at a module and property file and run them through the local engine."
+                title="Run your own files"
+                description="Point the workbench at a target module and property file, then run them through the same local engine."
               >
                 <div className="stack">
                   <label className="field">
@@ -390,14 +389,14 @@ export function App() {
                   onClick={handleLocalRun}
                   disabled={isRunningLocal}
                 >
-                  {isRunningLocal ? "Checking adapter seam..." : "Run local-path request"}
+                  {isRunningLocal ? "Running local files..." : "Run local files"}
                 </button>
               </Panel>
 
               <Panel
                 eyebrow="Preview"
-                title="Local rerun command"
-                description="This is the exact CLI request the browser is mirroring."
+                title="Matching CLI command"
+                description="This is the exact CLI command the browser is mirroring."
               >
                 <CodeBlock value={client.getLocalPreviewCommand(localDraft)} compact />
               </Panel>
@@ -447,7 +446,7 @@ export function App() {
             <Panel
               eyebrow="Local execution"
               title="Live local paths"
-              description="The browser sends the same deterministic request shape the CLI accepts."
+              description="The browser mirrors the same deterministic inputs the CLI accepts."
             >
               <div className="metric-grid">
                 <Metric label="Target module" value={localDraft.modulePath} />
@@ -487,7 +486,7 @@ function ReportSurface({ report }: { report: RunReport }) {
         tone={report.kind}
       >
         <div className="metric-grid">
-          <Metric label="Adapter" value={report.adapterName} />
+          <Metric label="Engine" value={report.adapterName} />
           <Metric label="Seed" value={formatSeed(report.seed)} />
           <Metric label="Runs" value={String(report.runs)} />
           <Metric label="Elapsed" value={formatDuration(report.elapsedMs)} />
@@ -540,8 +539,8 @@ function ReportSurface({ report }: { report: RunReport }) {
         {report.kind === "blocked" ? (
           <Panel
             eyebrow="Blocked"
-            title="Execution seam preserved"
-            description="The UI can already emit the request shape the shared engine should consume."
+            title="Execution blocked"
+            description="The local run could not produce a report yet. Fix the file path or property export and retry with the same seed."
             tone="blocked"
           >
             <InfoBlock label="Message" value={report.message} />
@@ -600,7 +599,7 @@ function ReportSurface({ report }: { report: RunReport }) {
         <Panel
           eyebrow="Sources"
           title="Target and property files"
-          description="Keep the execution surface explicit."
+          description="Keep the exact execution inputs visible."
         >
           <div className="stack">
             <InfoBlock label="Target module" value={report.target.modulePath} />
@@ -654,8 +653,8 @@ function BlockedSummary({ report }: { report: Extract<RunReport, { kind: "blocke
     <div className="inline-callout tone-blocked">
       <strong>{report.message}</strong>
       <div className="metric-strip">
-        <Metric label="Local mode" value="Preview only" />
-        <Metric label="Future executor" value="Pluggable" />
+        <Metric label="Run mode" value="Local files" />
+        <Metric label="Next step" value="Fix path or export" />
       </div>
     </div>
   );

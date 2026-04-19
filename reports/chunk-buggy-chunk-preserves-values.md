@@ -2,9 +2,9 @@
 
 Flattening chunk output should reproduce the original list without dropping the tail.
 
-- Generated: 2026-04-18T20:33:11.157Z
-- Module: `/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/chunk-buggy.js`
-- Properties: `/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/chunk.properties.js`
+- Generated: 2026-04-19T02:38:41.863Z
+- Module: `./packages/examples/dist/modules/chunk-buggy.js`
+- Properties: `./packages/examples/dist/properties/chunk.properties.js`
 
 ## Chunk preserves all values
 
@@ -12,7 +12,7 @@ Flattening chunk output should reproduce the original list without dropping the 
 - Function: `chunk`
 - Seed: `87492311`
 - Counterexample path: `0:0:0`
-- Rerun: `npm run studio -- run --module '/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/chunk-buggy.js' --properties '/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/properties/chunk.properties.js' --case 'chunk-preserves-values' --seed 87492311 --path '0:0:0'`
+- Rerun: `npm run studio -- run --module './packages/examples/dist/modules/chunk-buggy.js' --properties './packages/examples/dist/properties/chunk.properties.js' --case 'chunk-preserves-values' --seed 87492311 --path '0:0:0'`
 
 The chunked output should keep every original value in order.
 
@@ -56,7 +56,7 @@ flatten(chunk(values, size)) should equal the original values
 ### Minimal Reproduction
 
 ```ts
-import * as targetModule from "/Users/nicdunz/Documents/Codex/2026-04-18-build-and-ship-a-polished-local-3/packages/examples/dist/modules/chunk-buggy.js";
+import * as targetModule from "./packages/examples/dist/modules/chunk-buggy.js";
 
 const values = [0];
 const size = 2;

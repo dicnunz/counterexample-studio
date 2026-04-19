@@ -31,7 +31,7 @@ export function buildLocalPreviewCommand(draft: LocalPathDraft): string {
     localStudioRunCommand,
     `--module ${quoteShell(draft.modulePath)}`,
     `--export ${quoteShell(draft.exportName)}`,
-    `--property ${quoteShell(draft.propertyPath)}`,
+    `--properties ${quoteShell(draft.propertyPath)}`,
     `--seed ${draft.seed}`,
     `--runs ${draft.runs}`
   ].join(" ");
