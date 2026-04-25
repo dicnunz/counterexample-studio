@@ -10,6 +10,8 @@ You point it at a target module plus a typed property file. It gives you a deter
 
 Everything runs locally. There are no external APIs, no cloud services, and no telemetry.
 
+![Counterexample Studio shrink trace visual](assets/generated/counterexample-studio-hero.png)
+
 ![Counterexample Studio workbench](assets/screenshots/workbench.png)
 
 ![Counterexample Studio demo](assets/demo.gif)
