@@ -1,7 +1,11 @@
 {
   "name": "@counterexample-studio/cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
+  "funding": {
+    "type": "custom",
+    "url": "https://nicdunz.gumroad.com/l/smrimu"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {

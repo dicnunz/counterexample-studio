@@ -10,6 +10,8 @@ import { reportHasFailures } from "./report-status.js";
 import { runRuntimeWorker } from "./runtime-client.js";
 import { startStudioServer } from "./server.js";
 
+const SUPPORT_RECEIPT_URL = "https://nicdunz.gumroad.com/l/smrimu";
+
 type RunOptions = {
   readonly module: string | undefined;
   readonly property: string | undefined;
@@ -35,8 +37,15 @@ Usage:
   counterexample-studio report --module <file> --properties <file> [--out-dir <dir>]
   counterexample-studio example list
   counterexample-studio example run <example-id> [--seed <n>] [--runs <n>]
+  counterexample-studio support
   counterexample-studio ui [--port <n>] [--open]
 `);
+}
+
+function printSupport(): void {
+  console.log("Support Counterexample Studio:");
+  console.log(`- Optional $5 Codex run receipt: ${SUPPORT_RECEIPT_URL}`);
+  console.log("- Use it if the shrink path or report saved debugging time.");
 }
 
 function parseNumber(value: string | undefined): number | undefined {
@@ -273,6 +282,9 @@ async function main() {
       break;
     case "example":
       await handleExample(rest);
+      break;
+    case "support":
+      printSupport();
       break;
     case "ui":
       await handleUi(rest);
