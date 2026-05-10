@@ -28,6 +28,25 @@ test.describe("Counterexample Studio workbench", () => {
     ]);
   });
 
+  test("shows the paid operator kit route without hiding approval boundaries", async ({ page }) => {
+    const route = page.getByRole("link", { name: /agent browser operator os/i });
+
+    await expect(route).toBeVisible();
+    await expect(route).toHaveAttribute(
+      "href",
+      "https://nicdunz.gumroad.com/l/agent-browser-operator-os"
+    );
+
+    const body = page.locator("body");
+    await expect(body).toContainText(/self-serve browser\/account\/public-action control templates/i);
+    await expect(body).toContainText(/approval lanes/i);
+    await expect(body).toContainText(/proof capture/i);
+    await expect(body).toContainText(/handoffs/i);
+    await expect(body).toContainText(/go\/no-go checks/i);
+    await expect(body).toContainText(/No Chrome plugin repair/i);
+    await expect(body).toContainText(/posting without human approval/i);
+  });
+
   test("reports a reproducible failure for a bundled buggy example", async ({ page }) => {
     await selectExample(page, BUGGY_EXAMPLE);
     await runSelectedExample(page);

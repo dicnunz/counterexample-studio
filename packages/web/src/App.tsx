@@ -11,6 +11,7 @@ import type {
 import { createDemoStudioClient, defaultLocalPathDraft } from "./studioClient";
 
 const client = createDemoStudioClient();
+const supportRouteUrl = "https://nicdunz.gumroad.com/l/agent-browser-operator-os";
 
 export function App() {
   const [sourceMode, setSourceMode] = useState<"bundled" | "local">("bundled");
@@ -153,6 +154,18 @@ export function App() {
           <p>
             Bundled examples and your own files both execute through the same localhost engine.
           </p>
+          <div className="support-route">
+            <span>Paid route</span>
+            <a href={supportRouteUrl} target="_blank" rel="noreferrer">
+              Agent Browser Operator OS
+            </a>
+            <p>
+              Self-serve browser/account/public-action control templates for approval lanes,
+              proof capture, handoffs, and go/no-go checks. No Chrome plugin repair, account
+              access, setup calls, legal/financial/security advice, or posting without human
+              approval.
+            </p>
+          </div>
         </div>
       </header>
 

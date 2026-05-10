@@ -137,6 +137,35 @@ button {
   font-size: 1.25rem;
 }
 
+.support-route {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.support-route span {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.support-route a {
+  color: var(--accent-strong);
+  font-weight: 800;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.support-route p {
+  margin: 0;
+  color: var(--ink-body);
+  line-height: 1.5;
+}
+
 .workspace-grid {
   display: grid;
   grid-template-columns: minmax(310px, 360px) minmax(0, 1fr);

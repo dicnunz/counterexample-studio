@@ -25,7 +25,13 @@ Property-based testing is great at telling you that an invariant broke. It is us
 - it makes the shrink story inspectable instead of magical
 - it ships with paired buggy and fixed examples so the tool proves itself before you aim it at your code
 
-If Counterexample Studio saves debugging time, the smallest paid support path is the $5 Codex run receipt: <https://nicdunz.gumroad.com/l/smrimu>.
+If Counterexample Studio saves debugging time, the clean paid route is Agent Browser Operator OS: <https://nicdunz.gumroad.com/l/agent-browser-operator-os>.
+
+## Agent Browser Operator OS
+
+Agent Browser Operator OS is the self-serve operator kit behind this repo's support route. It is for browser/account/public-action control templates: approval lanes, proof capture, handoffs, go/no-go checks, and release notes that make agent work easier to review before anything public happens.
+
+Use it when you want the operating templates around local proof work, not a done-for-you automation service. It does not fix Chrome plugin issues, guarantee automation, include account access, include custom setup or calls, provide legal/financial/security advice, or approve posting without a human.
 
 ## v1 scope
 

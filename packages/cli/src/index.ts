@@ -9,8 +9,7 @@ import type { SuiteRunReport } from "@counterexample-studio/core";
 import { reportHasFailures } from "./report-status.js";
 import { runRuntimeWorker } from "./runtime-client.js";
 import { startStudioServer } from "./server.js";
-
-const SUPPORT_RECEIPT_URL = "https://nicdunz.gumroad.com/l/smrimu";
+import { formatSupportRoute } from "./support-route.js";
 
 type RunOptions = {
   readonly module: string | undefined;
@@ -43,9 +42,7 @@ Usage:
 }
 
 function printSupport(): void {
-  console.log("Support Counterexample Studio:");
-  console.log(`- Optional $5 Codex run receipt: ${SUPPORT_RECEIPT_URL}`);
-  console.log("- Use it if the shrink path or report saved debugging time.");
+  console.log(formatSupportRoute());
 }
 
 function parseNumber(value: string | undefined): number | undefined {
