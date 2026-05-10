@@ -25,6 +25,8 @@ Property-based testing is great at telling you that an invariant broke. It is us
 - it makes the shrink story inspectable instead of magical
 - it ships with paired buggy and fixed examples so the tool proves itself before you aim it at your code
 
+If Counterexample Studio saves debugging time, the smallest paid support path is the $5 Codex run receipt: <https://nicdunz.gumroad.com/l/smrimu>.
+
 ## v1 scope
 
 - JS/TS targets only
