@@ -1,13 +1,23 @@
 {
   "name": "counterexample-studio",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "type": "module",
   "description": "A local-first property-based testing workbench for JS/TS functions.",
-  "funding": {
-    "type": "custom",
-    "url": "https://nicdunz.gumroad.com/l/agent-browser-operator-os"
-  },
+  "funding": [
+    {
+      "type": "custom",
+      "url": "https://nicdunz.gumroad.com/l/agent-browser-operator-os"
+    },
+    {
+      "type": "custom",
+      "url": "https://nicdunz.gumroad.com/l/smrimu"
+    },
+    {
+      "type": "custom",
+      "url": "https://nicdunz.gumroad.com/l/agent-workflow-mini-audit"
+    }
+  ],
   "engines": {
     "node": ">=22"
   },

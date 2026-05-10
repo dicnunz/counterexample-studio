@@ -12,6 +12,8 @@ import { createDemoStudioClient, defaultLocalPathDraft } from "./studioClient";
 
 const client = createDemoStudioClient();
 const supportRouteUrl = "https://nicdunz.gumroad.com/l/agent-browser-operator-os";
+const supportReceiptUrl = "https://nicdunz.gumroad.com/l/smrimu";
+const miniAuditUrl = "https://nicdunz.gumroad.com/l/agent-workflow-mini-audit";
 
 export function App() {
   const [sourceMode, setSourceMode] = useState<"bundled" | "local">("bundled");
@@ -159,11 +161,18 @@ export function App() {
             <a href={supportRouteUrl} target="_blank" rel="noreferrer">
               Agent Browser Operator OS
             </a>
+            <a href={miniAuditUrl} target="_blank" rel="noreferrer">
+              Written mini audit
+            </a>
+            <a href={supportReceiptUrl} target="_blank" rel="noreferrer">
+              Optional $5 receipt
+            </a>
             <p>
               Self-serve browser/account/public-action control templates for approval lanes,
-              proof capture, handoffs, and go/no-go checks. No Chrome plugin repair, account
-              access, setup calls, legal/financial/security advice, or posting without human
-              approval.
+              proof capture, handoffs, and go/no-go checks, or a written review of a redacted
+              property test, shrink trace, or repro bundle. No Chrome plugin repair, account
+              access, setup calls, legal/financial/security advice, production credentials, or
+              posting without human approval.
             </p>
           </div>
         </div>

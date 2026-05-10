@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   AGENT_BROWSER_OPERATOR_OS_URL,
   formatSupportRoute,
+  MINI_AUDIT_URL,
+  SUPPORT_RECEIPT_URL,
   SUPPORT_ROUTE_BOUNDARY,
   SUPPORT_ROUTE_SUMMARY,
   SUPPORT_ROUTE_TITLE
@@ -11,6 +13,8 @@ describe("support route", () => {
   it("points to the Agent Browser Operator OS Gumroad product", () => {
     expect(formatSupportRoute()).toContain(SUPPORT_ROUTE_TITLE);
     expect(formatSupportRoute()).toContain(AGENT_BROWSER_OPERATOR_OS_URL);
+    expect(formatSupportRoute()).toContain(SUPPORT_RECEIPT_URL);
+    expect(formatSupportRoute()).toContain(MINI_AUDIT_URL);
   });
 
   it("keeps the buyer promise self-serve and approval-first", () => {
@@ -22,6 +26,7 @@ describe("support route", () => {
   });
 
   it("keeps excluded services explicit", () => {
+    expect(SUPPORT_ROUTE_BOUNDARY).toMatch(/redacted artifacts only/i);
     expect(SUPPORT_ROUTE_BOUNDARY).toMatch(/not chrome plugin repair/i);
     expect(SUPPORT_ROUTE_BOUNDARY).toMatch(/guaranteed automation/i);
     expect(SUPPORT_ROUTE_BOUNDARY).toMatch(/account access/i);
