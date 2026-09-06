@@ -1,39 +1,63 @@
-name: Public Heesch tools for local offline research
+name: Original Heesch baseline and public solver wheels
 on:
   push:
     branches: [research/heesch-baseline-20260906]
 permissions:
   contents: read
 jobs:
-  public-tools:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 20
+  original-baseline:
+    if: github.repository_owner == 'dicnunz' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
-      - name: Retrieve public sources and compile Linux executables
+      - name: Retrieve unchanged original upstream and install its checkers
+        shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          sudo apt-get install -y libcryptominisat5-dev cryptominisat libboost-dev
-          git clone --depth 1 https://github.com/isohedral/heesch-sat.git kaplan
+          mkdir -p evidence
           git clone https://github.com/Layr-Labs/heesch.git official
-          git -C official checkout --detach ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
-          mkdir -p public-tools/bin public-tools/lib public-tools/wheels public-tools/include
-          git -C kaplan rev-parse HEAD > public-tools/kaplan-commit.txt
-          git -C official archive HEAD | gzip -1 > public-tools/official-pinned.tar.gz
-          git -C kaplan archive HEAD | gzip -1 > public-tools/kaplan-source.tar.gz
-          cp -R /usr/include/cryptominisat5 public-tools/include/
-          g++ -std=c++17 -O3 -DNDEBUG -I/usr/include/cryptominisat5 kaplan/src/sat.cpp -o public-tools/bin/heesch-sat -lcryptominisat5 > public-tools/build.log 2>&1 || cat public-tools/build.log
-          cp /usr/lib/x86_64-linux-gnu/libcryptominisat5.so* public-tools/lib/
-          cp /usr/lib/x86_64-linux-gnu/libm4ri*.so* public-tools/lib/
-          cp /usr/lib/x86_64-linux-gnu/libboost_program_options*.so* public-tools/lib/
-          cp /usr/bin/cryptominisat5 public-tools/bin/ || cp /usr/bin/cryptominisat public-tools/bin/
-          test ! -f public-tools/bin/heesch-sat || ldd public-tools/bin/heesch-sat > public-tools/ldd.txt
-          python3 -m pip download --only-binary=:all: --python-version 313 --implementation cp --abi cp313 --platform manylinux_2_17_x86_64 -d public-tools/wheels python-sat || true
-          find public-tools -type f -exec sha256sum {} \; > public-tools.sha256
-          tar -czf public-tools.tar.gz public-tools public-tools.sha256
+          cd official
+          git checkout --detach ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          git rev-parse HEAD | tee ../evidence/official-commit.txt
+          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' '1cefa72c2147ab6e1aa9b02c9f4715f07c82a6fb9aa5175097cddf632102b10e  submission/proof.drat.xz' | sha256sum -c - | tee ../evidence/original-hashes.txt
+          sudo apt-get update -qq
+          bash setup.sh 2>&1 | tee ../evidence/setup.log
+          { uname -a; nproc; free -m; df -h .; } > ../evidence/machine.txt
+          git diff --exit-code
+      - name: Execute unchanged official benchmark and preserve its exact result
+        shell: bash
+        run: |
+          set -o pipefail
+          cd official
+          /usr/bin/time -v bash benchmark.sh 2>&1 | tee ../evidence/benchmark.log
+          status=${PIPESTATUS[0]}
+          printf '%s\n' "$status" > ../evidence/benchmark.exit
+          test ! -f score.json || cp score.json ../evidence/score.json
+          git diff --exit-code > ../evidence/source-diff.txt
+          exit "$status"
+      - name: Preserve original-verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: original-baseline-evidence
+          path: evidence/
+          retention-days: 1
+          if-no-files-found: error
+  offline-wheels:
+    if: github.repository_owner == 'dicnunz' && github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Download public CPython 3.13 solver packages only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p wheels
+          python3 -m pip download --only-binary=:all: --python-version 313 --implementation cp --abi cp313 --platform manylinux_2_27_x86_64 --platform manylinux_2_28_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 -d wheels ortools highspy setuptools==84.0.0
+          sha256sum wheels/* > wheels/MANIFEST.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: public-tools
-          path: public-tools.tar.gz
+          name: offline-solver-wheels
+          path: wheels/
           retention-days: 1
           compression-level: 0
