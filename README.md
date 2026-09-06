@@ -2,7 +2,11 @@
 
 A local property-testing workbench for pure synchronous JavaScript and TypeScript functions. It records failing inputs, seeds, shrink traces, and rerun commands in a CLI and local web interface.
 
-[Inspect a real saved report](demo/index.html) · [Download its JSON](demo/report.json)
+[Inspect a real saved report](https://dicnunz.github.io/demos/counterexample/) · [Download its JSON](https://dicnunz.github.io/demos/counterexample/report.json)
+
+[![Saved report from the local engine](assets/screenshots/saved-report.jpg)](https://dicnunz.github.io/demos/counterexample/)
+
+*Saved report from the local engine. Running or replaying tests requires the local app.*
 
 ## v1 scope
 
