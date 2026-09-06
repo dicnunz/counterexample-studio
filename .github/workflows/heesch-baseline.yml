@@ -1,61 +1,115 @@
-name: Heesch unchanged baseline verification
-
+name: Heesch baseline core proof and public tools
 on:
   push:
     branches: [research/heesch-baseline-20260906]
-
 permissions:
   contents: read
-
 jobs:
   official-baseline:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
-      - name: Fetch and authenticate unchanged official baseline
+      - name: Fetch original official repository and set up unchanged checkers
         shell: bash
         run: |
           set -euo pipefail
-          git init official
+          git clone https://github.com/Layr-Labs/heesch.git official
           cd official
-          git remote add origin https://github.com/Layr-Labs/heesch.git
-          git fetch --depth 1 origin ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
-          git checkout --detach FETCH_HEAD
-          test "$(git rev-parse HEAD)" = ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
-          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' | sha256sum --check
-          sha256sum submission/proof.drat.xz
-          payload_sha=$(xz -dc submission/proof.drat.xz | sha256sum | cut -d' ' -f1)
-          echo "decompressed proof SHA256: $payload_sha"
-          test "$payload_sha" = 51c87e0d6fa492a23324f83064c873ef0c6d0d2b56d0fb137bf50dffd8167a38
-          uname -a
-          free -h
-          df -h .
-          git status --porcelain
-      - name: Execute original setup without source changes
+          git checkout --detach ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' '1cefa72c2147ab6e1aa9b02c9f4715f07c82a6fb9aa5175097cddf632102b10e  submission/proof.drat.xz' | sha256sum --check
+          sudo apt-get update -qq
+          bash setup.sh
+          git diff --exit-code
+      - name: Use official conversion function on the original DRAT proof
         working-directory: official
         shell: bash
         run: |
           set -euo pipefail
-          sudo apt-get update -qq
-          bash setup.sh
-          git diff --exit-code
-      - name: Execute original benchmark including non-tiler proof gate
+          mkdir -p conversion
+          .venv-bench/bin/python -u - <<'PY'
+          import hashlib,lzma,pathlib,shutil,sys,time
+          sys.path.insert(0,'.')
+          from tools.prove import make_core_lrat,strip_proof_block,proof_block,sha256_file
+          from heesch_verify import verify_witness,canonical_form,parse_submission
+          from heesch_encoder.multilevel.api import encode_multilevel_stream
+          root=pathlib.Path.cwd(); work=root/'conversion'; dest=root/'submission'
+          original=(dest/'best.heesch').read_text(); (work/'original.heesch').write_text(original)
+          o=verify_witness(original); sub=o.submission; block=sub.proof
+          tile=frozenset(canonical_form(sub.cells,sub.grid,True))
+          print('ENCODE_ORIGINAL_FORMULA',flush=True)
+          enc=encode_multilevel_stream(tile,sub.grid,o.contact,block.m,work/'formula.cnf')
+          print('ENCODED',enc,flush=True)
+          assert enc.digest=='a99b1839146dc9ead9dc03d638c56403ca4dc89d0b886c90dd80e59b5b99a71a'
+          with lzma.open(dest/'proof.drat.xz','rb') as f, (work/'original.drat').open('wb') as out: shutil.copyfileobj(f,out)
+          assert sha256_file(work/'original.drat')=='51c87e0d6fa492a23324f83064c873ef0c6d0d2b56d0fb137bf50dffd8167a38'
+          print('CONVERT_USING_UNCHANGED_OFFICIAL_make_core_lrat',flush=True)
+          core,proof,ncore,nformula=make_core_lrat(work/'formula.cnf',work/'original.drat',root/'tools/bin/drat-trim',work)
+          print('CORE',ncore,'FULL',nformula,flush=True)
+          for source,name in [(core,'core.txt.xz'),(proof,'proof.lrat.xz')]:
+            with source.open('rb') as f,lzma.open(dest/name,'wb',preset=6) as out: shutil.copyfileobj(f,out)
+          text=strip_proof_block(original)+proof_block(block.m,enc.digest,enc.num_vars,enc.num_clauses,'proof.lrat.xz','lrat','xz',sha256_file(proof),core=('core.txt.xz','xz',sha256_file(core),ncore))
+          parse_submission(text)
+          assert strip_proof_block(text)==strip_proof_block(original)
+          (dest/'best.heesch').write_text(text)
+          print('SHAPE_AND_ALL_PLACEMENTS_BYTE_IDENTICAL',flush=True)
+          print(text[text.index('#PROOF'):],flush=True)
+          PY
+          git diff --exit-code -- . ':!submission'
+      - name: Run unchanged official benchmark on the identical baseline geometry
         working-directory: official
         shell: bash
         run: |
           set -euo pipefail
           bash benchmark.sh
-          git diff --exit-code
-          test -s score.json
+          git diff --exit-code -- . ':!submission'
           echo OFFICIAL_SCORE_JSON_BEGIN
           cat score.json
           echo OFFICIAL_SCORE_JSON_END
-          python3 -c 'import json; s=json.load(open("score.json")); assert abs(s["score"]-1267/254)<1e-12; assert s["metrics"]["hc_verified"]==4; assert s["metrics"]["non_tiler_evidence"]=="proof"; print("EXACT_BASELINE_REPRODUCED")'
-      - name: Preserve final status in job log only
+          python3 -c 'import json; s=json.load(open("score.json")); assert abs(s["score"]-1267/254)<1e-12; assert s["metrics"]["hc_verified"]==4; assert s["metrics"]["non_tiler_evidence"]=="proof"; print("BASELINE_GEOMETRY_REPRODUCED_WITH_OFFICIAL_CORE_PROOF")'
+      - name: Package baseline data and proof without large temporary CNF
         if: always()
-        working-directory: official
-        shell: bash
         run: |
-          git rev-parse HEAD
-          git diff --stat
-          test ! -f score.json || cat score.json
+          mkdir -p baseline-evidence
+          cp official/submission/best.heesch baseline-evidence/ || true
+          cp official/submission/proof.lrat.xz baseline-evidence/ || true
+          cp official/submission/core.txt.xz baseline-evidence/ || true
+          cp official/conversion/original.heesch baseline-evidence/ || true
+          cp official/score.json baseline-evidence/ || true
+          git -C official rev-parse HEAD > baseline-evidence/official-commit.txt
+          git -C official diff > baseline-evidence/only-submission-proof-metadata.diff
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: baseline-evidence
+          path: baseline-evidence
+          retention-days: 1
+          compression-level: 0
+  public-tools:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Retrieve original public tools and build Linux executables
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y libcryptominisat5-dev cryptominisat
+          git clone --depth 1 https://github.com/isohedral/heesch-sat.git kaplan
+          git clone https://github.com/Layr-Labs/heesch.git official
+          git -C official checkout --detach ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          mkdir -p public-tools/bin public-tools/lib public-tools/wheels
+          git -C kaplan rev-parse HEAD > public-tools/kaplan-commit.txt
+          g++ -std=c++17 -O3 -DNDEBUG -I/usr/include/cryptominisat5 kaplan/src/sat.cc -o public-tools/bin/heesch-sat -lcryptominisat5 || g++ -std=c++17 -O3 -DNDEBUG -I/usr/include/cryptominisat5 kaplan/src/sat.cpp -o public-tools/bin/heesch-sat -lcryptominisat5
+          cp /usr/lib/x86_64-linux-gnu/libcryptominisat5.so* public-tools/lib/
+          cp /usr/bin/cryptominisat5 public-tools/bin/ || cp /usr/bin/cryptominisat public-tools/bin/
+          ldd public-tools/bin/heesch-sat > public-tools/ldd.txt
+          git -C official archive HEAD | gzip -1 > public-tools/official-pinned.tar.gz
+          git -C kaplan archive HEAD | gzip -1 > public-tools/kaplan-source.tar.gz
+          python3 -m pip download --only-binary=:all: --python-version 313 --implementation cp --abi cp313 --platform manylinux_2_17_x86_64 -d public-tools/wheels python-sat || true
+          find public-tools -type f -exec sha256sum {} \; > public-tools.sha256
+          tar -czf public-tools.tar.gz public-tools public-tools.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: public-tools
+          path: public-tools.tar.gz
+          retention-days: 1
+          compression-level: 0
