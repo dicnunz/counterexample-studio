@@ -17,12 +17,12 @@ test.describe("Counterexample Studio workbench", () => {
     await page.getByLabel("Runs", { exact: true }).fill("350");
     await page.getByTestId("run-button").click();
     await expect(page.getByTestId("rerun-button")).toBeEnabled();
-    const input = await page.locator(".code-frame").first().innerText();
+    const input = JSON.parse(await page.locator(".code-frame pre").first().innerText());
     const request = page.waitForRequest((entry) => entry.url().endsWith("/api/run/local"));
     await page.getByRole("button", { name: "Replay exact failure" }).click();
     expect((await request).postDataJSON()).toMatchObject({ caseId: "chunk-preserves-values", seed: 87492311, runs: 350, path: "0:0:0", exportName: "chunk" });
     await expect(page.getByRole("status")).toContainText("minimal witness matches");
-    await expect(page.locator(".code-frame").first()).toHaveText(input);
+    await expect.poll(async () => JSON.parse(await page.locator(".code-frame pre").first().innerText())).toEqual(input);
   });
 
   test("shows a passing state for the paired fixed implementation with the same seed", async ({ page }) => {
