@@ -1,4 +1,4 @@
-name: Unchanged Heesch baseline with documented heap configuration
+name: Original Heesch baseline with preserved documented heap
 on:
   push:
     branches: [research/heesch-baseline-20260906]
@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
-      - name: Prepare free runner and pinned unmodified public baseline
+      - name: Prepare free runner and exact original public baseline
         shell: bash
         run: |
           set -euo pipefail
@@ -25,15 +25,16 @@ jobs:
           sudo mkswap /mnt/heesch-verification.swap
           sudo swapon /mnt/heesch-verification.swap
           bash setup.sh 2>&1 | tee ../evidence/setup.log
-          { uname -a; nproc; free -m; swapon --show; df -h .; printf '%s\n' 'HEESCH_CAKE_HEAP_MB=24576 (documented official checker option; no profile override)'; } > ../evidence/environment.txt
+          { uname -a; nproc; free -m; swapon --show; df -h .; } > ../evidence/environment.txt
           git diff --exit-code
-      - name: Run unchanged original benchmark
+      - name: Diagnose sudo environment and preserve actual heap in unchanged benchmark
         shell: bash
         run: |
           set -o pipefail
           cd official
           export HEESCH_CAKE_HEAP_MB=24576
-          /usr/bin/time -v bash benchmark.sh 2>&1 | tee ../evidence/benchmark.log
+          { printf '%s\n' 'Ordinary sudo environment:'; sudo env | grep '^HEESCH_CAKE_HEAP_MB=' || true; printf '%s\n' 'Explicit root environment:'; sudo env HEESCH_CAKE_HEAP_MB=24576 .venv-bench/bin/python -c 'from heesch_encoder.proofcheck.checkers import cake_lpr_heap_mb; print("Effective documented heap MiB:",cake_lpr_heap_mb(12288)); assert cake_lpr_heap_mb(12288)==24576'; } | tee ../evidence/heap-diagnosis.txt
+          /usr/bin/time -v sudo env HEESCH_CAKE_HEAP_MB=24576 bash benchmark.sh 2>&1 | tee ../evidence/benchmark.log
           status=${PIPESTATUS[0]}
           echo "$status" > ../evidence/benchmark.exit
           test ! -f score.json || cp score.json ../evidence/score.json
@@ -43,26 +44,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: baseline-documented-heap-evidence
+          name: baseline-preserved-heap-evidence
           path: evidence/
           retention-days: 1
           if-no-files-found: error
-  published-shape-data:
-    if: github.repository_owner == 'dicnunz' && github.event.repository.private == false
-    runs-on: ubuntu-24.04
-    timeout-minutes: 5
-    steps:
-      - name: Retrieve public text data where the author server permits access
-        shell: bash
-        run: |
-          mkdir -p data
-          for n in 11 13 15 16 17; do
-            url="https://cs.uwaterloo.ca/~csk/heesch/hex/${n}hex_3up.txt"
-            curl -A 'Mozilla/5.0' --fail --location --max-time 30 "$url" -o "data/${n}hex_3up.txt" 2>>data/retrieval.log || true
-          done
-          find data -type f -exec sha256sum {} \; > data/MANIFEST.sha256
-      - uses: actions/upload-artifact@v4
-        with:
-          name: published-shape-data
-          path: data/
-          retention-days: 1
