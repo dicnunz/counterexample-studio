@@ -1,0 +1,38 @@
+name: Public Heesch solver and published data
+on:
+  push:
+    branches: [research/heesch-public-sources-b-20260906]
+permissions:
+  contents: read
+jobs:
+  public-sources:
+    if: github.repository_owner == 'dicnunz' && github.event.repository.private == false
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    steps:
+      - name: Build pinned public solver and collect published inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone https://github.com/Layr-Labs/heesch.git official
+          git -C official checkout --detach ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          bash official/tools/build_solver.sh
+          git -C official diff --exit-code
+          mkdir -p public-research/bin public-research/history public-research/published
+          cp official/tools/bin/cadical public-research/bin/
+          cp official/build/cadical-2.1.3.tar.gz public-research/
+          git -C official log --format='%H %aI %s' -- submission/best.heesch > public-research/history/commits.txt
+          git -C official log -60 --format='%H' -- submission/best.heesch | while read commit; do
+            git -C official show "$commit:submission/best.heesch" > "public-research/history/$commit.heesch" || true
+          done
+          for n in 11 12 13 14 15 16 17; do
+            curl --fail --location --max-time 45 "https://cs.uwaterloo.ca/~csk/heesch/hex/${n}hex_3up.txt" -o "public-research/published/${n}hex_3up.txt" || true
+          done
+          find public-research -type f -exec sha256sum {} \; > public-research.sha256
+          tar -czf public-research.tar.gz public-research public-research.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: public-heesch-solver-data
+          path: public-research.tar.gz
+          retention-days: 1
+          compression-level: 0
