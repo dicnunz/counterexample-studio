@@ -1,63 +1,29 @@
-name: Original Heesch baseline and public solver wheels
+name: Published Heesch census data
 on:
   push:
     branches: [research/heesch-baseline-20260906]
 permissions:
   contents: read
 jobs:
-  original-baseline:
-    if: github.repository_owner == 'dicnunz' && github.event.repository.private == false
-    runs-on: ubuntu-24.04
-    timeout-minutes: 45
-    steps:
-      - name: Retrieve unchanged original upstream and install its checkers
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p evidence
-          git clone https://github.com/Layr-Labs/heesch.git official
-          cd official
-          git checkout --detach ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
-          git rev-parse HEAD | tee ../evidence/official-commit.txt
-          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' '1cefa72c2147ab6e1aa9b02c9f4715f07c82a6fb9aa5175097cddf632102b10e  submission/proof.drat.xz' | sha256sum -c - | tee ../evidence/original-hashes.txt
-          sudo apt-get update -qq
-          bash setup.sh 2>&1 | tee ../evidence/setup.log
-          { uname -a; nproc; free -m; df -h .; } > ../evidence/machine.txt
-          git diff --exit-code
-      - name: Execute unchanged official benchmark and preserve its exact result
-        shell: bash
-        run: |
-          set -o pipefail
-          cd official
-          /usr/bin/time -v bash benchmark.sh 2>&1 | tee ../evidence/benchmark.log
-          status=${PIPESTATUS[0]}
-          printf '%s\n' "$status" > ../evidence/benchmark.exit
-          test ! -f score.json || cp score.json ../evidence/score.json
-          git diff --exit-code > ../evidence/source-diff.txt
-          exit "$status"
-      - name: Preserve original-verification evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: original-baseline-evidence
-          path: evidence/
-          retention-days: 1
-          if-no-files-found: error
-  offline-wheels:
+  public-data:
     if: github.repository_owner == 'dicnunz' && github.event.repository.private == false
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - name: Download public CPython 3.13 solver packages only
+      - name: Retrieve author-published data without running any search
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p wheels
-          python3 -m pip download --only-binary=:all: --python-version 313 --implementation cp --abi cp313 --platform manylinux_2_27_x86_64 --platform manylinux_2_28_x86_64 --platform manylinux_2_17_x86_64 --platform manylinux2014_x86_64 -d wheels ortools highspy setuptools==84.0.0
-          sha256sum wheels/* > wheels/MANIFEST.sha256
+          mkdir -p data/hex
+          curl --fail --location --retry 3 https://cs.uwaterloo.ca/~csk/heesch/ -o data/index.html
+          for n in 11 12 13 14 15 16 17; do
+            curl --fail --location --retry 3 "https://cs.uwaterloo.ca/~csk/heesch/hex/${n}hex_3up.txt" -o "data/hex/${n}hex_3up.txt"
+          done
+          printf '%s\n' 'Author source: https://cs.uwaterloo.ca/~csk/heesch/' > data/SOURCE.txt
+          find data -type f -exec sha256sum {} \; > data/MANIFEST.sha256
       - uses: actions/upload-artifact@v4
         with:
-          name: offline-solver-wheels
-          path: wheels/
+          name: published-heesch-census
+          path: data/
           retention-days: 1
           compression-level: 0
