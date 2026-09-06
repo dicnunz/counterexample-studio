@@ -23,7 +23,11 @@ jobs:
           git checkout --detach "$pin"
           test "$(git rev-parse HEAD)" = "$pin"
           git diff --exit-code "$pin" --
-          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' '51c87e0d6fa492a23324f83064c873ef0c6d0d2b56d0fb137bf50dffd8167a38  submission/proof.drat.xz' | sha256sum --check
+          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' | sha256sum --check
+          test "$(git hash-object submission/proof.drat.xz)" = 507570c79515c58ea58d561baf4d17f62751cbbb
+          payload_digest="$(xz -dc submission/proof.drat.xz | sha256sum | cut -d' ' -f1)"
+          test "$payload_digest" = 51c87e0d6fa492a23324f83064c873ef0c6d0d2b56d0fb137bf50dffd8167a38
+          printf 'PROOF_PAYLOAD_SHA256 %s\n' "$payload_digest"
           printf '\nOFFICIAL_BASELINE_ENVIRONMENT\n'
           uname -a
           free -h
