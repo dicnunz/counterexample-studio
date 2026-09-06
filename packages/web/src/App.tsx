@@ -11,9 +11,6 @@ import type {
 import { createDemoStudioClient, defaultLocalPathDraft } from "./studioClient";
 
 const client = createDemoStudioClient();
-const supportRouteUrl = "https://nicdunz.gumroad.com/l/agent-browser-operator-os";
-const supportReceiptUrl = "https://nicdunz.gumroad.com/l/smrimu";
-const miniAuditUrl = "https://nicdunz.gumroad.com/l/agent-workflow-mini-audit";
 
 export function App() {
   const [sourceMode, setSourceMode] = useState<"bundled" | "local">("bundled");
@@ -143,7 +140,7 @@ export function App() {
       <header className="topbar">
         <div className="topbar-copy">
           <p className="eyebrow">Counterexample Studio</p>
-          <h1>Counterexample Studio turns property runs into sharp, local counterexamples.</h1>
+          <h1>Inspect failing inputs and rerun property tests.</h1>
           <p className="lede">
             Run the real local engine from the browser and keep the exact seed, rerun command,
             shrink path, search trace, and invariant-versus-actual view visible while you debug.
@@ -156,25 +153,6 @@ export function App() {
           <p>
             Bundled examples and your own files both execute through the same localhost engine.
           </p>
-          <div className="support-route">
-            <span>Paid route</span>
-            <a href={supportRouteUrl} target="_blank" rel="noreferrer">
-              Agent Browser Operator OS
-            </a>
-            <a href={miniAuditUrl} target="_blank" rel="noreferrer">
-              Written mini audit
-            </a>
-            <a href={supportReceiptUrl} target="_blank" rel="noreferrer">
-              Optional $5 receipt
-            </a>
-            <p>
-              Self-serve browser/account/public-action control templates for approval lanes,
-              proof capture, handoffs, and go/no-go checks, or a written review of a redacted
-              property test, shrink trace, or repro bundle. No Chrome plugin repair, account
-              access, setup calls, legal/financial/security advice, production credentials, or
-              posting without human approval.
-            </p>
-          </div>
         </div>
       </header>
 
