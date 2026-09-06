@@ -1,216 +1,99 @@
-import { expect, type Locator, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 
-const BUGGY_EXAMPLE = /buggy|broken|failing|fails/i;
-const FIXED_EXAMPLE = /fixed|correct|passing|passes/i;
+const savedFailure = JSON.parse(await readFile(new URL("../reports/chunk-buggy-chunk-preserves-values.json", import.meta.url), "utf8"));
+const savedPass = JSON.parse(await readFile(new URL("../reports/chunk-fixed-chunk-preserves-values.json", import.meta.url), "utf8"));
 
 test.describe("Counterexample Studio workbench", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/Counterexample Studio/i);
-    await requireVisible("workbench heading", [
-      page.getByRole("heading", {
-        name: /counterexample studio|property-based testing workbench|property-based testing/i
-      }),
-      page.locator("main h1")
-    ]);
+    await expect(page.getByRole("heading", { name: "Chunk preserves all values" })).toBeVisible();
+    await expect(page.getByTestId("run-button")).toBeEnabled();
   });
 
-  test("shows the core workbench controls", async ({ page }) => {
-    await requireVisible("example picker", [
-      page.getByTestId("example-picker"),
-      page.getByRole("combobox", { name: /example|bundled example/i }),
-      page.getByLabel(/example|bundled example/i)
-    ]);
-
-    await requireVisible("run control", [
-      page.getByTestId("run-button"),
-      page.getByRole("button", { name: /run example|run property|run/i })
-    ]);
+  test("replays an actual failure with saved metadata and preserves the witness", async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.screenshot({ path: testInfo.outputPath("workbench.png"), fullPage: true });
+    await page.getByLabel("Runs", { exact: true }).fill("350");
+    await page.getByTestId("run-button").click();
+    await expect(page.getByTestId("rerun-button")).toBeEnabled();
+    const input = await page.locator(".code-frame").first().innerText();
+    const request = page.waitForRequest((entry) => entry.url().endsWith("/api/run/local"));
+    await page.getByRole("button", { name: "Replay exact failure" }).click();
+    expect((await request).postDataJSON()).toMatchObject({ caseId: "chunk-preserves-values", seed: 87492311, runs: 350, path: "0:0:0", exportName: "chunk" });
+    await expect(page.getByRole("status")).toContainText("minimal witness matches");
+    await expect(page.locator(".code-frame").first()).toHaveText(input);
   });
 
-  test("shows the paid operator kit route without hiding approval boundaries", async ({ page }) => {
-    const route = page.getByRole("link", { name: /agent browser operator os/i });
-
-    await expect(route).toBeVisible();
-    await expect(route).toHaveAttribute(
-      "href",
-      "https://nicdunz.gumroad.com/l/agent-browser-operator-os"
-    );
-
-    const body = page.locator("body");
-    await expect(body).toContainText(/self-serve browser\/account\/public-action control templates/i);
-    await expect(body).toContainText(/approval lanes/i);
-    await expect(body).toContainText(/proof capture/i);
-    await expect(body).toContainText(/handoffs/i);
-    await expect(body).toContainText(/go\/no-go checks/i);
-    await expect(body).toContainText(/No Chrome plugin repair/i);
-    await expect(body).toContainText(/posting without human approval/i);
+  test("shows a passing state for the paired fixed implementation with the same seed", async ({ page }) => {
+    await page.getByRole("button", { name: "Try fixed version" }).click();
+    await expect(page.getByText("Passed all 100 sampled runs. No counterexample found.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Invariant satisfied" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Counterexample", exact: true })).toHaveCount(0);
+    await expect(page.getByLabel("Seed", { exact: true })).toHaveValue("87492311");
+    await page.getByTestId("rerun-button").click();
+    await expect(page.getByRole("status")).toContainText("same seed and sampling budget");
   });
 
-  test("reports a reproducible failure for a bundled buggy example", async ({ page }) => {
-    await selectExample(page, BUGGY_EXAMPLE);
-    await runSelectedExample(page);
-
-    const body = page.locator("body");
-    await expect(body).toContainText(/property failed|counterexample found|falsified|minimal counterexample/i);
-    await expect(body).toContainText(/seed/i);
-    await expect(body).toContainText(/rerun command|rerun same seed|reproduction snippet|reproduction/i);
-    await expect(body).toContainText(/failing input|minimal counterexample|counterexample input/i);
-    await expect(body).toContainText(/shrink path/i);
-    await expect(body).toContainText(/search trace/i);
-    await expect(body).toContainText(/invariant/i);
-    await expect(body).toContainText(/actual/i);
-
-    const firstSeed = await extractSeed(page);
-    const rerunControl = await requireVisible("rerun control", [
-      page.getByTestId("rerun-button"),
-      page.getByRole("button", { name: /rerun same seed|rerun|run again/i })
-    ]);
-
-    await rerunControl.click();
-    await expect.poll(async () => readSeed(page)).toBe(firstSeed);
-    await expect(body).toContainText(/property failed|counterexample found|falsified|minimal counterexample/i);
+  test("imports every suite case without executing code and exports the original data", async ({ page }) => {
+    const suite = { ...savedFailure, title: "Saved multi-property report", cases: [{ ...savedPass.cases[0], id: "first-pass" }, savedFailure.cases[0]] };
+    const requests: string[] = [];
+    page.on("request", (request) => { if (request.url().includes("/api/run/")) requests.push(request.url()); });
+    await page.getByRole("button", { name: "Import JSON", exact: true }).click();
+    await page.getByLabel("Or paste report JSON").fill(JSON.stringify(suite));
+    await page.getByRole("button", { name: "Open report", exact: true }).click();
+    await expect(page.getByRole("status")).toHaveText("Report imported. No code was executed.");
+    await expect(page.getByLabel("Inspect property")).toHaveValue("chunk-preserves-values");
+    await page.getByLabel("Inspect property").selectOption("first-pass");
+    await expect(page.getByRole("heading", { name: "Invariant satisfied" })).toBeVisible();
+    expect(requests).toEqual([]);
+    const downloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export JSON" }).click();
+    const download = await downloadPromise;
+    const path = await download.path();
+    expect(JSON.parse(await readFile(path!, "utf8"))).toEqual(suite);
   });
 
-  test("shows a clear passing state for a bundled fixed example", async ({ page }) => {
-    await selectExample(page, FIXED_EXAMPLE);
-    await runSelectedExample(page);
+  test("rejects malformed imports and keeps the existing report", async ({ page }) => {
+    await page.getByRole("button", { name: "Import JSON", exact: true }).click();
+    await page.getByLabel("Or paste report JSON").fill('{"cases":[]}');
+    await page.getByRole("button", { name: "Open report", exact: true }).click();
+    await expect(page.getByRole("alert")).toContainText("Invalid report");
+    await page.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Counterexample", exact: true })).toBeVisible();
+  });
 
-    const body = page.locator("body");
-    await expect(body).toContainText(/passed|no counterexample|property holds/i);
-    await expect(body).not.toContainText(/property failed|counterexample found|falsified|minimal counterexample/i);
+  test("keeps failure evidence when the replay server errors and allows a retry", async ({ page }) => {
+    await page.route("**/api/run/local", (route) => route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "Target module could not be loaded" }) }));
+    await page.getByRole("button", { name: "Replay exact failure" }).click();
+    await expect(page.getByRole("alert")).toContainText("Target module could not be loaded");
+    await expect(page.getByRole("heading", { name: "Counterexample", exact: true })).toBeVisible();
+    await expect(page.getByTestId("rerun-button")).toBeEnabled();
+    await page.unroute("**/api/run/local");
+    await page.getByTestId("rerun-button").click();
+    await expect(page.getByRole("status")).toContainText("Failure reproduced");
+    await expect(page.getByRole("alert")).toHaveCount(0);
+  });
+
+  test("can import reports while the local engine is disconnected", async ({ page }) => {
+    await page.route("**/api/examples", (route) => route.abort());
+    await page.reload();
+    await expect(page.getByRole("alert")).toContainText("Cannot reach the local engine");
+    await page.getByRole("button", { name: "Import JSON", exact: true }).click();
+    await page.getByLabel("Choose JSON file").setInputFiles({ name: "saved.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(savedFailure)) });
+    await expect(page.getByRole("heading", { name: "Chunk preserves all values" })).toBeVisible();
+    await expect(page.getByRole("status")).toContainText("No code was executed");
+  });
+
+  test("works at mobile width without document overflow", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(page.getByRole("button", { name: "Import JSON", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Search trace", exact: true }).click();
+    await expect(page.getByText(/recorded attempts/)).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.getByRole("button", { name: "Import JSON", exact: true }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 });
-
-async function selectExample(page: Page, pattern: RegExp): Promise<void> {
-  const nativePickerCandidates = [
-    page.getByTestId("example-picker"),
-    page.getByRole("combobox", { name: /example|bundled example/i }),
-    page.getByLabel(/example|bundled example/i)
-  ];
-
-  for (const candidate of nativePickerCandidates) {
-    if (await trySelectFromNativeControl(candidate, pattern)) {
-      return;
-    }
-  }
-
-  const combobox = page.getByRole("combobox", { name: /example|bundled example/i }).first();
-  const visibleCombobox = await firstVisibleMatch(combobox);
-  if (visibleCombobox) {
-    await visibleCombobox.click();
-    const option = await findVisible(page, [
-      page.getByRole("option", { name: pattern }),
-      page.getByRole("button", { name: pattern }),
-      page.getByText(pattern)
-    ]);
-
-    if (option) {
-      await option.click();
-      return;
-    }
-  }
-
-  const directChoice = await findVisible(page, [
-    page.getByRole("button", { name: pattern }),
-    page.getByRole("radio", { name: pattern }),
-    page.getByRole("option", { name: pattern }),
-    page.getByRole("link", { name: pattern }),
-    page.getByText(pattern)
-  ]);
-
-  if (directChoice) {
-    await directChoice.click();
-    return;
-  }
-
-  throw new Error(`Could not select a bundled example matching ${pattern}`);
-}
-
-async function runSelectedExample(page: Page): Promise<void> {
-  const runControl = await requireVisible("run control", [
-    page.getByTestId("run-button"),
-    page.getByRole("button", { name: /run example|run property|run/i })
-  ]);
-
-  await runControl.click();
-}
-
-async function extractSeed(page: Page): Promise<string> {
-  const seed = await readSeed(page);
-  expect(seed, "Expected a numeric deterministic seed in the report").not.toBeNull();
-  return seed!;
-}
-
-async function readSeed(page: Page): Promise<string | null> {
-  const text = await page.locator("body").innerText();
-  return text.match(/\bseed\b[^\n\r\d-]*(-?\d+)/i)?.[1] ?? null;
-}
-
-async function trySelectFromNativeControl(locator: Locator, pattern: RegExp): Promise<boolean> {
-  const visibleControl = await firstVisibleMatch(locator);
-  if (!visibleControl) {
-    return false;
-  }
-
-  const tagName = await visibleControl.evaluate((element) => element.tagName.toLowerCase()).catch(() => "");
-  if (tagName !== "select") {
-    return false;
-  }
-
-  const value = await visibleControl.evaluate(
-    (element, serializedPattern) => {
-      const select = element as HTMLSelectElement;
-      const matcher = new RegExp(serializedPattern.source, serializedPattern.flags);
-      const option = Array.from(select.options).find((entry) => {
-        return matcher.test(entry.label) || matcher.test(entry.text) || matcher.test(entry.value);
-      });
-      return option?.value ?? null;
-    },
-    { source: pattern.source, flags: pattern.flags }
-  );
-
-  if (!value) {
-    throw new Error(`Native example picker does not include an option matching ${pattern}`);
-  }
-
-  await visibleControl.selectOption(value);
-  return true;
-}
-
-async function requireVisible(description: string, candidates: Locator[]): Promise<Locator> {
-  const locator = await findVisible(undefined, candidates);
-  if (locator) {
-    return locator;
-  }
-
-  throw new Error(`Could not find a visible ${description}`);
-}
-
-async function findVisible(page: Page | undefined, candidates: Locator[]): Promise<Locator | null> {
-  for (const candidate of candidates) {
-    const visibleMatch = await firstVisibleMatch(candidate);
-    if (visibleMatch) {
-      return visibleMatch;
-    }
-  }
-
-  if (page) {
-    const textMatches = await page.locator("body").innerText();
-    throw new Error(`No visible candidate matched. Current body text:\n${textMatches}`);
-  }
-
-  return null;
-}
-
-async function firstVisibleMatch(locator: Locator): Promise<Locator | null> {
-  const count = await locator.count();
-  for (let index = 0; index < count; index += 1) {
-    const match = locator.nth(index);
-    if (await match.isVisible()) {
-      return match;
-    }
-  }
-
-  return null;
-}

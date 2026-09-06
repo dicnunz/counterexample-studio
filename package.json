@@ -20,7 +20,8 @@
     "build": "npm run build --workspace @counterexample-studio/core && npm run build --workspace @counterexample-studio/examples && npm run build --workspace @counterexample-studio/cli && npm run build --workspace @counterexample-studio/web",
     "e2e": "npm run build && npm run playwright:install && playwright test",
     "demo:examples": "npm run build --workspace @counterexample-studio/core && npm run build --workspace @counterexample-studio/examples && npm run demo --workspace @counterexample-studio/examples",
-    "verify": "npm run lint && npm run typecheck && npm run test && npm run demo:examples && npm run e2e"
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run demo:examples && npm run e2e",
+    "demo:report": "npm run build --workspace @counterexample-studio/core && npm run build --workspace @counterexample-studio/examples && node --import tsx scripts/build-demo.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

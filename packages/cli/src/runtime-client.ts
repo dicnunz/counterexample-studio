@@ -21,7 +21,7 @@ interface RuntimeWorkerResponse {
 }
 
 const require = createRequire(import.meta.url);
-const tsxCliPath = require.resolve("tsx/cli");
+const tsxLoaderPath = require.resolve("tsx");
 const currentFile = fileURLToPath(import.meta.url);
 const currentDirectory = dirname(currentFile);
 const workerPath = resolve(
@@ -29,8 +29,8 @@ const workerPath = resolve(
   currentFile.endsWith(".ts") ? "./runtime-worker.ts" : "./runtime-worker.js"
 );
 
-export async function runRuntimeWorker(request: RuntimeWorkerRequest): Promise<SuiteRunReport> {
-  const child = spawn(process.execPath, [tsxCliPath, workerPath], {
+export async function runRuntimeWorker(request: RuntimeWorkerRequest, timeoutMs = 30_000): Promise<SuiteRunReport> {
+  const child = spawn(process.execPath, ["--import", tsxLoaderPath, workerPath], {
     stdio: ["pipe", "pipe", "pipe"]
   });
 
@@ -48,10 +48,16 @@ export async function runRuntimeWorker(request: RuntimeWorkerRequest): Promise<S
   child.stdin.write(JSON.stringify(request));
   child.stdin.end();
 
-  const exitCode = await new Promise<number>((resolvePromise, rejectPromise) => {
-    child.on("error", rejectPromise);
-    child.on("close", (code) => resolvePromise(code ?? 0));
-  });
+  let timedOut = false;
+  const timeout = setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, timeoutMs);
+  let exitCode: number;
+  try {
+    exitCode = await new Promise<number>((resolvePromise, rejectPromise) => {
+      child.on("error", rejectPromise);
+      child.on("close", (code) => resolvePromise(code ?? 1));
+    });
+  } finally { clearTimeout(timeout); }
+  if (timedOut) throw new Error(`Execution stopped after ${timeoutMs / 1000} seconds. Check for an infinite loop or reduce the sampling budget, then retry with the same seed.`);
 
   const response = JSON.parse(stdout || "{}") as RuntimeWorkerResponse;
 

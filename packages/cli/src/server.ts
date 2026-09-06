@@ -8,24 +8,11 @@ import type { ExampleCatalogEntry } from "@counterexample-studio/examples";
 import type { SuiteRunReport } from "@counterexample-studio/core";
 import { toDisplayPath } from "./path-display.js";
 import { runRuntimeWorker } from "./runtime-client.js";
+import { parseExampleRunRequest, parseLocalRunRequest, RequestError } from "./request-validation.js";
 
 interface StartServerOptions {
   readonly port?: number;
   readonly openBrowser?: boolean;
-}
-
-interface LocalRunBody {
-  readonly modulePath: string;
-  readonly propertyPath: string;
-  readonly exportName?: string;
-  readonly seed?: number;
-  readonly runs?: number;
-}
-
-interface ExampleRunBody {
-  readonly exampleId: string;
-  readonly seed?: number;
-  readonly runs?: number;
 }
 
 function contentType(path: string): string {
@@ -51,12 +38,16 @@ function getWebDistPath(): string {
   return resolve(fileURLToPath(new URL("../../web/dist", import.meta.url)));
 }
 
-async function readJsonBody<T>(request: IncomingMessage): Promise<T> {
+async function readJsonBody(request: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
+  let size = 0;
   for await (const chunk of request) {
+    size += Buffer.byteLength(chunk);
+    if (size > 32 * 1024) throw new RequestError("Request body exceeds 32 KB.");
     chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
   }
-  return JSON.parse(Buffer.concat(chunks).toString("utf8")) as T;
+  try { return JSON.parse(Buffer.concat(chunks).toString("utf8")) as unknown; }
+  catch { throw new RequestError("Request body must be valid JSON."); }
 }
 
 function sendJson(response: ServerResponse, statusCode: number, body: unknown): void {
@@ -80,7 +71,7 @@ function serializeExample(example: ExampleCatalogEntry) {
   };
 }
 
-async function runExample(body: ExampleRunBody): Promise<{ example: ReturnType<typeof serializeExample>; report: SuiteRunReport }> {
+async function runExample(body: ReturnType<typeof parseExampleRunRequest>): Promise<{ example: ReturnType<typeof serializeExample>; report: SuiteRunReport }> {
   const example = findExample(body.exampleId);
   const request = {
     modulePath: example.modulePath,
@@ -133,20 +124,13 @@ export function startStudioServer(options: StartServerOptions = {}) {
       }
 
       if (request.method === "POST" && url.pathname === "/api/run/example") {
-        const body = await readJsonBody<ExampleRunBody>(request);
+        const body = parseExampleRunRequest(await readJsonBody(request));
         sendJson(response, 200, await runExample(body));
         return;
       }
 
       if (request.method === "POST" && url.pathname === "/api/run/local") {
-        const body = await readJsonBody<LocalRunBody>(request);
-        const runtimeRequest = {
-          modulePath: body.modulePath,
-          propertiesPath: body.propertyPath,
-          ...(body.exportName !== undefined ? { exportName: body.exportName } : {}),
-          ...(body.seed !== undefined ? { seed: body.seed } : {}),
-          ...(body.runs !== undefined ? { numRuns: body.runs } : {})
-        };
+        const runtimeRequest = parseLocalRunRequest(await readJsonBody(request));
         const report = await runRuntimeWorker(runtimeRequest);
         sendJson(response, 200, { report });
         return;
@@ -154,7 +138,7 @@ export function startStudioServer(options: StartServerOptions = {}) {
 
       await serveStatic(response, url.pathname);
     } catch (error) {
-      sendError(response, 500, error instanceof Error ? error.message : String(error));
+      sendError(response, error instanceof RequestError ? 400 : 500, error instanceof Error ? error.message : String(error));
     }
   });
 

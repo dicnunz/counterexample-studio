@@ -56,6 +56,17 @@ describe("runPropertySuite", () => {
     expect(report.cases[0]?.status).toBe("fail");
     expect(report.cases[0]?.counterexamplePath).not.toBeNull();
     expect(report.cases[0]?.rerunCommand).toContain("--seed 12");
+    expect(report.cases[0]?.requestedRuns).toBe(50);
+    expect(report.cases[0]?.rerunCommand).toContain("--runs 50");
+    expect(report.cases[0]?.rerunCommand).toContain("--export 'chunk'");
+    const original = report.cases[0]!;
+    const replay = runPropertySuite(targetModule, suite, {
+      modulePath: "/tmp/chunk.ts", propertiesPath: "/tmp/chunk.properties.ts",
+      caseId: original.id, seed: original.seed, path: original.counterexamplePath!, numRuns: original.requestedRuns!
+    }).cases[0]!;
+    expect(replay.status).toBe("fail");
+    expect(replay.failingInput).toEqual(original.failingInput);
+    expect(replay.actual).toEqual(original.actual);
     expect(report.cases[0]?.shrinkTrace.length).toBeGreaterThan(0);
   });
 
@@ -103,6 +114,7 @@ describe("runPropertySuite", () => {
     });
 
     expect(report.cases[0]?.status).toBe("pass");
+    expect(report.cases[0]?.rerunCommand).toContain("--runs 30");
     expect(report.cases[0]?.expected).toBeNull();
     expect(report.cases[0]?.reproductionSnippet).toBeNull();
   });
