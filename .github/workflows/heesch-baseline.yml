@@ -1,0 +1,57 @@
+name: Heesch unchanged baseline verification
+
+on:
+  push:
+    branches: [research/heesch-baseline-20260906]
+
+permissions:
+  contents: read
+
+jobs:
+  official-baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Fetch and authenticate unchanged official baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init official
+          cd official
+          git remote add origin https://github.com/Layr-Labs/heesch.git
+          git fetch --depth 1 origin ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          git checkout --detach FETCH_HEAD
+          test "$(git rev-parse HEAD)" = ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' '51c87e0d6fa492a23324f83064c873ef0c6d0d2b56d0fb137bf50dffd8167a38  submission/proof.drat.xz' | sha256sum --check
+          uname -a
+          free -h
+          df -h .
+          git status --porcelain
+      - name: Execute original setup without source changes
+        working-directory: official
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          bash setup.sh
+          git diff --exit-code
+      - name: Execute original benchmark including non-tiler proof gate
+        working-directory: official
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash benchmark.sh
+          git diff --exit-code
+          test -s score.json
+          echo OFFICIAL_SCORE_JSON_BEGIN
+          cat score.json
+          echo OFFICIAL_SCORE_JSON_END
+          python3 -c 'import json; s=json.load(open("score.json")); assert abs(s["score"]-1267/254)<1e-12; assert s["metrics"]["hc_verified"]==4; assert s["metrics"]["non_tiler_evidence"]=="proof"; print("EXACT_BASELINE_REPRODUCED")'
+      - name: Preserve final status in job log only
+        if: always()
+        working-directory: official
+        shell: bash
+        run: |
+          git rev-parse HEAD
+          git diff --stat
+          test ! -f score.json || cat score.json
