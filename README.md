@@ -2,7 +2,7 @@
 
 A local property-testing workbench for pure synchronous JavaScript and TypeScript functions. It records failing inputs, seeds, shrink traces, and rerun commands in a CLI and local web interface.
 
-![Counterexample Studio workbench](assets/screenshots/workbench.png)
+[Inspect a real saved report](demo/index.html) · [Download its JSON](demo/report.json)
 
 ## v1 scope
 
@@ -28,13 +28,15 @@ npm run studio -- report --example chunk-buggy --out-dir reports
 npm run studio -- ui --open
 ```
 
-The local UI serves at [http://127.0.0.1:4173](http://127.0.0.1:4173).
+The local UI serves at [http://127.0.0.1:4173](http://127.0.0.1:4173). For frontend development, keep that local server running and start `npm run dev` in another terminal; Vite proxies `/api` to it.
 
 ## What the workflow looks like
 
 1. Start with a bundled failing example to see the surface area.
 2. Compare it against the paired fixed example with the same property and deterministic seed.
-3. Point the CLI or browser at your own module and property file and keep the rerun command visible while you debug.
+3. Export the full JSON report, or import an existing CLI report without executing any code.
+4. Inspect each property in a suite and replay the selected case with its saved seed, sampling budget, export, and shrink path.
+5. Point the CLI or browser at your own module and property file; a failed run or replay keeps the previous evidence available.
 
 ## Demo Proof
 
@@ -158,13 +160,32 @@ export default defineProperties<TargetModule>({
 
 The browser UI runs the same local engine the CLI uses. It keeps the debugging surface visible in one place:
 
-- bundled example picker with paired buggy and fixed implementations
-- local-file runner for your own module and property file
-- deterministic seed and run count controls
-- minimal failing input and actual result
-- shrink path and search trace
-- rerun command and reproduction snippet
-- pass, fail, and blocked states with distinct output
+- paired buggy/fixed examples with the same seed and sampling budget
+- a local-file runner with an optional export override; leave it blank to use each property's definition
+- a focused input/expected/actual comparison and distinct passing state
+- full JSON import/export, compatible with CLI reports, retaining every suite case and trace
+- per-property inspection for suites containing both passing and failing cases
+- exact replay from structured case metadata, with editable local file paths
+- shrink and search trace tables, source details, and copyable commands/snippets
+- recoverable errors that preserve the previous report; runs stop after 30 seconds
+
+Imported JSON is validated before display (5 MB maximum) and is never executed on import. Clicking replay runs the indicated **local JS/TS files** through Studio's existing engine. It does not execute the report's shell command or reproduction snippet. Paths are relative to the directory where Studio started; change them in the replay section when moving reports between machines.
+
+New reports record `requestedRuns` separately from the number of runs before failure. Older failing reports did not preserve that budget; the UI explicitly uses the historical default of 100 for those replays. Reproduction assumes unchanged target code, property definitions, and dependencies. A passing sample is not a proof for every possible input.
+
+The browser limits a run to 10,000 samples and displays up to 300 search attempts at once; JSON exports retain the complete recorded trace. Report imports remain available if the local API is disconnected.
+
+## Saved report demo
+
+`demo/index.html` is a standalone, responsive HTML report produced by the real bundled engine. It includes the actual failing witness, expected/actual output, accepted shrink candidates, and a CLI reproduction command. It is suitable for static hosting and requires no credentials or API. It clearly identifies itself as saved output; executing tests requires the local app.
+
+Regenerate it from the current code:
+
+```bash
+npm run demo:report
+```
+
+The output is `demo/index.html` plus `demo/report.json`.
 
 ## Bundled examples
 
@@ -228,8 +249,7 @@ CI lives in `.github/workflows/ci.yml` and mirrors the same validation bar.
 
 - Repo mark: `assets/repo-mark.svg` and `assets/repo-mark.png`
 - Social preview: `assets/social-preview.svg` and `assets/social-preview.png`
-- Screenshot: `assets/screenshots/workbench.png`
-- Demo GIF: `assets/demo.gif`
+- Generated report demo: `demo/index.html` and `demo/report.json`
 
 ## License
 

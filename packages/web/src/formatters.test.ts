@@ -26,3 +26,17 @@ describe("formatters", () => {
     expect(quoteShell("it's-live")).toBe("'it'\\''s-live'");
   });
 });
+
+it("keeps a relocated replay command aligned with the structured request", async () => {
+  const { readFileSync } = await import("node:fs");
+  const { parseReportJson } = await import("./reportIO");
+  const { buildReplayCommand } = await import("./formatters");
+  const report = parseReportJson(readFileSync(new URL("../../../reports/chunk-buggy-chunk-preserves-values.json", import.meta.url), "utf8"));
+  const command = buildReplayCommand({ ...report.cases[0]!, requestedRuns: 350 }, { modulePath: "./new/target.ts", propertyPath: "./new/property.ts" });
+  expect(command).toContain("--module './new/target.ts'");
+  expect(command).toContain("--properties './new/property.ts'");
+  expect(command).toContain("--runs 350");
+  expect(command).toContain("--case 'chunk-preserves-values'");
+  expect(command).toContain("--path '0:0:0'");
+  expect(command).not.toContain("./packages/examples/");
+});

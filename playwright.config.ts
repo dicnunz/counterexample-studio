@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const port = Number(process.env.PORT ?? 4173);
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 45_000,
@@ -15,7 +17,7 @@ export default defineConfig({
   ],
   outputDir: "test-results/playwright",
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:4173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://127.0.0.1:${port}`,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     testIdAttribute: "data-testid",
@@ -31,7 +33,7 @@ export default defineConfig({
   ],
   webServer: {
     command: "npm run preview:e2e --workspace @counterexample-studio/cli",
-    port: 4173,
+    port,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000
   }

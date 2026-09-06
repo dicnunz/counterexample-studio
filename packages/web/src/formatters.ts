@@ -1,3 +1,5 @@
+import type { CaseRunReport } from "@counterexample-studio/core";
+import { replayRequest } from "./reportIO";
 import type { JsonValue, LocalPathDraft } from "./model";
 
 const localStudioRunCommand = "npm run studio -- run";
@@ -30,7 +32,7 @@ export function buildLocalPreviewCommand(draft: LocalPathDraft): string {
   return [
     localStudioRunCommand,
     `--module ${quoteShell(draft.modulePath)}`,
-    `--export ${quoteShell(draft.exportName)}`,
+    ...(draft.exportName.trim() ? [`--export ${quoteShell(draft.exportName)}`] : []),
     `--properties ${quoteShell(draft.propertyPath)}`,
     `--seed ${draft.seed}`,
     `--runs ${draft.runs}`
@@ -43,4 +45,18 @@ export function quoteShell(value: string): string {
   }
 
   return `'${value.replaceAll("'", `'\\''`)}'`;
+}
+
+export function buildReplayCommand(entry: CaseRunReport, paths: { modulePath: string; propertyPath: string }): string {
+  const request = replayRequest(entry, paths);
+  return [
+    localStudioRunCommand,
+    `--module ${quoteShell(request.modulePath)}`,
+    `--properties ${quoteShell(request.propertyPath)}`,
+    `--case ${quoteShell(request.caseId)}`,
+    `--seed ${request.seed}`,
+    `--export ${quoteShell(request.exportName)}`,
+    `--runs ${request.runs}`,
+    ...(request.path !== undefined ? [`--path ${quoteShell(request.path)}`] : [])
+  ].join(" ");
 }

@@ -167,6 +167,7 @@ export function runPropertySuite<TModule extends Record<string, unknown>>(
       status: runDetails.failed ? "fail" : "pass",
       seed: runDetails.seed,
       numRuns: runDetails.numRuns,
+      requestedRuns: fcParameters.numRuns ?? 100,
       numShrinks: runDetails.numShrinks,
       counterexamplePath: runDetails.counterexamplePath,
       modulePath: options.modulePath,

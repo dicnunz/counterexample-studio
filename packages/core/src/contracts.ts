@@ -88,6 +88,8 @@ export interface CaseRunReport {
   readonly status: "pass" | "fail";
   readonly seed: number;
   readonly numRuns: number;
+  /** Original sampling budget, retained separately from runs before failure. */
+  readonly requestedRuns?: number;
   readonly numShrinks: number;
   readonly counterexamplePath: string | null;
   readonly rerunCommand: string;
