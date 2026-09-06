@@ -1,30 +1,73 @@
-name: Public high-Heesch text dataset recovery
+name: Public baseline official record-profile proof verification
 on:
   push:
     branches: [research/heesch-baseline-20260906]
 permissions:
   contents: read
+  actions: read
 jobs:
-  published-data:
+  record-profile-cli:
     if: github.repository_owner == 'dicnunz' && github.event.repository.private == false
     runs-on: ubuntu-24.04
-    timeout-minutes: 8
+    timeout-minutes: 40
     steps:
-      - name: Retrieve public author archive and preserve only text metadata
+      - name: Retrieve the already-public converted baseline proof
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 34054187475
+          github-token: ${{ github.token }}
+          path: recovered
+      - name: Install the pinned, unmodified official checker
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p evidence/text
-          curl --fail --location --max-time 300 --retry 2 https://cs.uwaterloo.ca/~csk/heesch/heesch_dataset.tar.gz -o dataset.tar.gz
-          sha256sum dataset.tar.gz > evidence/archive.sha256
-          tar -tzf dataset.tar.gz > evidence/archive-members.txt
-          tar -xzf dataset.tar.gz -C evidence/text --wildcards --no-anchored '*hex_3up.txt'
-          find evidence/text -type f -exec sha256sum {} \; > evidence/text.sha256
-          printf '%s\n' 'Author: Craig S. Kaplan' 'Source: https://cs.uwaterloo.ca/~csk/heesch/heesch_dataset.tar.gz' > evidence/SOURCE.txt
-      - uses: actions/upload-artifact@v4
+          mkdir -p evidence baseline
+          git clone https://github.com/Layr-Labs/heesch.git official
+          cd official
+          git checkout --detach ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          bash setup.sh 2>&1 | tee ../evidence/setup.log
+          git rev-parse HEAD > ../evidence/official-commit.txt
+          cd ..
+          find recovered -name best.heesch -exec cp {} baseline/best.heesch \;
+          find recovered -name core.txt.xz -exec cp {} baseline/core.txt.xz \;
+          find recovered -name proof.lrat.xz -exec cp {} baseline/proof.lrat.xz \;
+          python3 -c 'from pathlib import Path; a=Path("official/submission/best.heesch").read_bytes(); b=Path("baseline/best.heesch").read_bytes(); assert a.split(b"#PROOF")[0]==b.split(b"#PROOF")[0]; print("Original tile, all coronas and defect block are byte-identical. Only proof encoding differs.")' | tee evidence/witness-equality.txt
+          sha256sum baseline/* > evidence/input.sha256
+      - name: Full proof gate through the documented unchanged official CLI
+        shell: bash
+        run: |
+          set -o pipefail
+          cd official
+          export HEESCH_CHECKER_DIR="$PWD/tools/bin"
+          /usr/bin/time -v .venv-bench/bin/python -m heesch_verify ../baseline/best.heesch --check-proof --profile record 2> ../evidence/cli-time.txt | tee ../evidence/official-cli.json
+          status=${PIPESTATUS[0]}
+          echo "$status" > ../evidence/official-cli.exit
+          git diff --exit-code > ../evidence/source-diff.txt
+          exit "$status"
+      - name: Score the original geometry through the unchanged official components
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd official
+          .venv-bench/bin/python - <<'PY' | tee ../evidence/official-component-score.json
+          import json
+          from pathlib import Path
+          from dataclasses import replace
+          from heesch_verify import verify_witness
+          from heesch_verify.defect import verify_defect
+          from heesch_verify.score import yukon_score
+          w=verify_witness(Path('../baseline/best.heesch').read_text())
+          s=w.submission
+          d=verify_defect(frozenset(s.cells),s.grid,w.hc_corona,s.defect,w.contact)
+          r=replace(w.result,defect_corona_level=d.corona_level,defect_hc=d.defect_hc,defect_hh=d.defect_hh,defect_required=d.required,defect_pocket_cells=d.pocket_cells,defect_partial_tiles=d.partial_tiles)
+          print(json.dumps({'method':'unchanged official CLI proof gate with --profile record, then unchanged witness/defect/score modules; not a benchmark.sh score file','score':round(yukon_score(r),6),'exact_fraction':'1267/254','hc':r.hc_verified,'defect_hc':d.defect_hc,'required':d.required,'proof_check_command_exit':0},sort_keys=True))
+          assert r.hc_verified==4 and d.defect_hc==3 and d.required==254
+          PY
+      - name: Preserve exact public-input verification evidence
         if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: published-high-heesch-texts
+          name: baseline-record-cli-evidence
           path: evidence/
           retention-days: 1
           if-no-files-found: error
