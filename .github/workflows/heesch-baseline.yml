@@ -22,7 +22,11 @@ jobs:
           git fetch --depth 1 origin ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
           git checkout --detach FETCH_HEAD
           test "$(git rev-parse HEAD)" = ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
-          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' '51c87e0d6fa492a23324f83064c873ef0c6d0d2b56d0fb137bf50dffd8167a38  submission/proof.drat.xz' | sha256sum --check
+          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' | sha256sum --check
+          sha256sum submission/proof.drat.xz
+          payload_sha=$(xz -dc submission/proof.drat.xz | sha256sum | cut -d' ' -f1)
+          echo "decompressed proof SHA256: $payload_sha"
+          test "$payload_sha" = 51c87e0d6fa492a23324f83064c873ef0c6d0d2b56d0fb137bf50dffd8167a38
           uname -a
           free -h
           df -h .
