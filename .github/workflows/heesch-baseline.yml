@@ -1,0 +1,64 @@
+name: Heesch unchanged official baseline
+on:
+  push:
+    branches: ['research/heesch-baseline-2026-09-06']
+permissions:
+  contents: read
+concurrency:
+  group: heesch-baseline-2026-09-06
+  cancel-in-progress: false
+jobs:
+  baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - name: Checkout pinned official public repository
+        uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd
+        with:
+          repository: Layr-Labs/heesch
+          ref: ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          persist-credentials: false
+      - name: Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Verify input provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' '51c87e0d6fa492a23324f83064c873ef0c6d0d2b56d0fb137bf50dffd8167a38  submission/proof.drat.xz' | sha256sum -c -
+          uname -a
+          free -m
+          df -h .
+      - name: Install official sandbox dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v bwrap >/dev/null 2>&1 || { sudo apt-get update -qq; sudo apt-get install -y -qq bubblewrap; }
+          bwrap --version
+      - name: Unchanged official setup
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash setup.sh
+          test -x tools/bin/drat-trim
+          test -x tools/bin/lrat-check
+          test -x tools/bin/cake_lpr
+      - name: Unchanged official benchmark and full proof gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/time -v bash benchmark.sh
+          echo OFFICIAL_SCORE_JSON_BEGIN
+          cat score.json
+          echo OFFICIAL_SCORE_JSON_END
+          python3 - <<'PY'
+          import json, math
+          r=json.load(open('score.json'))
+          assert math.isclose(r['score'],1267/254,rel_tol=0,abs_tol=1e-12),r
+          assert r['metrics']['hc_verified']==4,r
+          assert r['metrics']['non_tiler_evidence']=='proof',r
+          print('UNCHANGED_OFFICIAL_BASELINE_REPRODUCED')
+          PY
+          git diff --exit-code -- heesch_verify heesch_encoder harness tools benchmark.sh benchmark.json setup.sh .github
