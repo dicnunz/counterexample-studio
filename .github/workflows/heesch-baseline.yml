@@ -1,84 +1,35 @@
-name: Official baseline record CLI with adequate scratch disk
+name: Public polyiamond data for local Heesch research
 on:
   push:
     branches: [research/heesch-baseline-20260906]
 permissions:
   contents: read
-  actions: read
 jobs:
-  record-cli:
+  public-data:
     if: github.repository_owner == 'dicnunz' && github.event.repository.private == false
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 10
     steps:
-      - name: Free unused SDKs on the disposable free runner
-        shell: bash
+      - name: Download original author archive and extract text datasets
         run: |
           set -euo pipefail
-          mkdir -p evidence
-          df -h / > evidence/disk-before.txt
-          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /usr/local/.ghcup /opt/ghc
-          df -h / > evidence/disk-after.txt
-      - name: Download already-public equivalent baseline proof
-        uses: actions/download-artifact@v4
-        with:
-          run-id: 34054187475
-          github-token: ${{ github.token }}
-          path: recovered
-      - name: Prepare untouched official source and byte-identical geometry
-        shell: bash
-        run: |
-          set -euo pipefail
-          git clone https://github.com/Layr-Labs/heesch.git official
-          cd official
-          git checkout --detach ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
-          bash setup.sh 2>&1 | tee ../evidence/setup.log
-          git rev-parse HEAD > ../evidence/official-commit.txt
-          cd ..
-          mkdir baseline
-          find recovered -name best.heesch -exec cp {} baseline/best.heesch \;
-          find recovered -name core.txt.xz -exec cp {} baseline/core.txt.xz \;
-          find recovered -name proof.lrat.xz -exec cp {} baseline/proof.lrat.xz \;
-          python3 -c 'from pathlib import Path; a=Path("official/submission/best.heesch").read_bytes(); b=Path("baseline/best.heesch").read_bytes(); assert a.split(b"#PROOF")[0]==b.split(b"#PROOF")[0]; print("Original shape, all coronas, and defect block are byte-identical. Only proof encoding differs.")' | tee evidence/witness-equality.txt
-          sha256sum baseline/* > evidence/input.sha256
-          { free -m; df -h /; } > evidence/environment.txt
-      - name: Unchanged official full proof gate with documented record profile
-        shell: bash
-        run: |
-          set -o pipefail
-          cd official
-          export HEESCH_CHECKER_DIR="$PWD/tools/bin"
-          export HEESCH_CAKE_HEAP_MB=12288
-          /usr/bin/time -v .venv-bench/bin/python -m heesch_verify ../baseline/best.heesch --check-proof --profile record 2> ../evidence/cli-time.txt | tee ../evidence/official-cli.json
-          status=${PIPESTATUS[0]}
-          echo "$status" > ../evidence/official-cli.exit
-          git diff --exit-code > ../evidence/source-diff.txt
-          exit "$status"
-      - name: Run unchanged official defect and scoring components after proof success
-        shell: bash
-        run: |
-          set -euo pipefail
-          cd official
-          .venv-bench/bin/python - <<'PY' | tee ../evidence/official-component-score.json
-          import json
-          from pathlib import Path
-          from dataclasses import replace
-          from heesch_verify import verify_witness
-          from heesch_verify.defect import verify_defect
-          from heesch_verify.score import yukon_score
-          gate=json.loads(Path('../evidence/official-cli.json').read_text())
-          assert gate['proof']['status']=='PROVED_NON_TILER',gate['proof']
-          w=verify_witness(Path('../baseline/best.heesch').read_text());s=w.submission
-          d=verify_defect(frozenset(s.cells),s.grid,w.hc_corona,s.defect,w.contact)
-          r=replace(w.result,defect_corona_level=d.corona_level,defect_hc=d.defect_hc,defect_hh=d.defect_hh,defect_required=d.required,defect_pocket_cells=d.pocket_cells,defect_partial_tiles=d.partial_tiles)
-          print(json.dumps({'method':'official CLI full proof gate with explicit record profile plus unchanged official witness, defect and scoring components; not benchmark.sh score.json','score':round(yukon_score(r),6),'exact_fraction':'1267/254','hc':r.hc_verified,'defect_hc':d.defect_hc,'required':d.required,'proof_gate':gate['proof']},sort_keys=True))
-          assert r.hc_verified==4 and d.defect_hc==3 and d.required==254
+          mkdir -p public-data
+          curl --fail --location --max-time 120 https://cs.uwaterloo.ca/~csk/heesch/heesch_dataset.tar.gz -o author.tar.gz
+          sha256sum author.tar.gz > public-data/archive.sha256
+          python3 - <<'PY'
+          import pathlib,tarfile,hashlib
+          out=pathlib.Path('public-data')
+          with tarfile.open('author.tar.gz') as archive:
+              for entry in archive:
+                  if entry.isfile() and entry.name.startswith('dataset/iamond/') and entry.name.endswith('.txt'):
+                      content=archive.extractfile(entry).read()
+                      name=pathlib.Path(entry.name).name
+                      (out/name).write_bytes(content)
+          (out/'SOURCE.txt').write_text('Author: Craig S. Kaplan\nSource: https://cs.uwaterloo.ca/~csk/heesch/heesch_dataset.tar.gz\n')
           PY
-      - name: Preserve raw output regardless of outcome
-        if: always()
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
-          name: baseline-record-adequate-disk-evidence
-          path: evidence/
+          name: public-iamond-texts
+          path: public-data/
           retention-days: 1
           if-no-files-found: error
