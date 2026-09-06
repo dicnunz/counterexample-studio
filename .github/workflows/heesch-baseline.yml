@@ -1,50 +1,30 @@
-name: Original Heesch baseline with preserved documented heap
+name: Public high-Heesch text dataset recovery
 on:
   push:
     branches: [research/heesch-baseline-20260906]
 permissions:
   contents: read
 jobs:
-  baseline:
+  published-data:
     if: github.repository_owner == 'dicnunz' && github.event.repository.private == false
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 8
     steps:
-      - name: Prepare free runner and exact original public baseline
+      - name: Retrieve public author archive and preserve only text metadata
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p evidence
-          git clone https://github.com/Layr-Labs/heesch.git official
-          cd official
-          git checkout --detach ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
-          git rev-parse HEAD > ../evidence/official-commit.txt
-          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' '1cefa72c2147ab6e1aa9b02c9f4715f07c82a6fb9aa5175097cddf632102b10e  submission/proof.drat.xz' | sha256sum -c - > ../evidence/original-hashes.txt
-          sudo fallocate -l 24G /mnt/heesch-verification.swap
-          sudo chmod 600 /mnt/heesch-verification.swap
-          sudo mkswap /mnt/heesch-verification.swap
-          sudo swapon /mnt/heesch-verification.swap
-          bash setup.sh 2>&1 | tee ../evidence/setup.log
-          { uname -a; nproc; free -m; swapon --show; df -h .; } > ../evidence/environment.txt
-          git diff --exit-code
-      - name: Diagnose sudo environment and preserve actual heap in unchanged benchmark
-        shell: bash
-        run: |
-          set -o pipefail
-          cd official
-          export HEESCH_CAKE_HEAP_MB=24576
-          { printf '%s\n' 'Ordinary sudo environment:'; sudo env | grep '^HEESCH_CAKE_HEAP_MB=' || true; printf '%s\n' 'Explicit root environment:'; sudo env HEESCH_CAKE_HEAP_MB=24576 .venv-bench/bin/python -c 'from heesch_encoder.proofcheck.checkers import cake_lpr_heap_mb; print("Effective documented heap MiB:",cake_lpr_heap_mb(12288)); assert cake_lpr_heap_mb(12288)==24576'; } | tee ../evidence/heap-diagnosis.txt
-          /usr/bin/time -v sudo env HEESCH_CAKE_HEAP_MB=24576 bash benchmark.sh 2>&1 | tee ../evidence/benchmark.log
-          status=${PIPESTATUS[0]}
-          echo "$status" > ../evidence/benchmark.exit
-          test ! -f score.json || cp score.json ../evidence/score.json
-          git diff --exit-code > ../evidence/source-diff.txt
-          exit "$status"
-      - name: Preserve exact output even on resource failure
+          mkdir -p evidence/text
+          curl --fail --location --max-time 300 --retry 2 https://cs.uwaterloo.ca/~csk/heesch/heesch_dataset.tar.gz -o dataset.tar.gz
+          sha256sum dataset.tar.gz > evidence/archive.sha256
+          tar -tzf dataset.tar.gz > evidence/archive-members.txt
+          tar -xzf dataset.tar.gz -C evidence/text --wildcards --no-anchored '*hex_3up.txt'
+          find evidence/text -type f -exec sha256sum {} \; > evidence/text.sha256
+          printf '%s\n' 'Author: Craig S. Kaplan' 'Source: https://cs.uwaterloo.ca/~csk/heesch/heesch_dataset.tar.gz' > evidence/SOURCE.txt
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
-          name: baseline-preserved-heap-evidence
+          name: published-high-heesch-texts
           path: evidence/
           retention-days: 1
           if-no-files-found: error
