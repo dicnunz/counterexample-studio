@@ -4,20 +4,6 @@
   "private": true,
   "type": "module",
   "description": "A local-first property-based testing workbench for JS/TS functions.",
-  "funding": [
-    {
-      "type": "custom",
-      "url": "https://nicdunz.gumroad.com/l/agent-browser-operator-os"
-    },
-    {
-      "type": "custom",
-      "url": "https://nicdunz.gumroad.com/l/smrimu"
-    },
-    {
-      "type": "custom",
-      "url": "https://nicdunz.gumroad.com/l/agent-workflow-mini-audit"
-    }
-  ],
   "engines": {
     "node": ">=22"
   },

@@ -2,10 +2,6 @@
   "name": "@counterexample-studio/core",
   "version": "0.1.2",
   "type": "module",
-  "funding": {
-    "type": "custom",
-    "url": "https://nicdunz.gumroad.com/l/agent-browser-operator-os"
-  },
   "main": "./dist/index.js",
   "types": "./src/index.ts",
   "exports": {
