@@ -1,4 +1,4 @@
-name: Public polyiamond data for local Heesch research
+name: Public polyomino data for local Heesch research
 on:
   push:
     branches: [research/heesch-baseline-20260906]
@@ -10,26 +10,29 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - name: Download original author archive and extract text datasets
+      - name: Download author archive and extract public polyomino data
         run: |
           set -euo pipefail
           mkdir -p public-data
           curl --fail --location --max-time 120 https://cs.uwaterloo.ca/~csk/heesch/heesch_dataset.tar.gz -o author.tar.gz
           sha256sum author.tar.gz > public-data/archive.sha256
           python3 - <<'PY'
-          import pathlib,tarfile,hashlib
+          import pathlib,tarfile
           out=pathlib.Path('public-data')
           with tarfile.open('author.tar.gz') as archive:
+              names=[]
               for entry in archive:
-                  if entry.isfile() and entry.name.startswith('dataset/iamond/') and entry.name.endswith('.txt'):
-                      content=archive.extractfile(entry).read()
-                      name=pathlib.Path(entry.name).name
-                      (out/name).write_bytes(content)
+                  if entry.isfile() and entry.name.endswith('.txt'):
+                      names.append(entry.name)
+                      if '/omino/' in entry.name:
+                          content=archive.extractfile(entry).read()
+                          (out/pathlib.Path(entry.name).name).write_bytes(content)
+              (out/'archive-text-index.txt').write_text('\n'.join(names)+'\n')
           (out/'SOURCE.txt').write_text('Author: Craig S. Kaplan\nSource: https://cs.uwaterloo.ca/~csk/heesch/heesch_dataset.tar.gz\n')
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: public-iamond-texts
+          name: public-omino-texts
           path: public-data/
           retention-days: 1
           if-no-files-found: error
