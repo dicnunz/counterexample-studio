@@ -1,0 +1,41 @@
+name: Heesch official baseline verification
+'on':
+  push:
+    branches: ['research/heesch-baseline-verification-20260906']
+permissions: {}
+concurrency:
+  group: heesch-official-baseline-only
+  cancel-in-progress: true
+jobs:
+  baseline:
+    if: github.repository == 'dicnunz/counterexample-studio'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - name: Run the unchanged pinned official checker
+        shell: bash
+        run: |
+          set -euo pipefail
+          pin=ce3b8d6974d3f318c3c6081b421ed51c7d041d6e
+          cd "${RUNNER_TEMP}"
+          git clone --no-checkout https://github.com/Layr-Labs/heesch.git heesch-official
+          cd heesch-official
+          git checkout --detach "$pin"
+          test "$(git rev-parse HEAD)" = "$pin"
+          git diff --exit-code "$pin" --
+          printf '%s\n' '87d35cd173835f0f775cc632921423f6d511dea88352eca30124010cb02b3572  submission/best.heesch' '51c87e0d6fa492a23324f83064c873ef0c6d0d2b56d0fb137bf50dffd8167a38  submission/proof.drat.xz' | sha256sum --check
+          printf '\nOFFICIAL_BASELINE_ENVIRONMENT\n'
+          uname -a
+          free -h
+          df -h .
+          printf '\nOFFICIAL_SETUP_BEGIN\n'
+          bash ./setup.sh
+          printf '\nOFFICIAL_BENCHMARK_BEGIN\n'
+          bash ./benchmark.sh
+          printf '\nOFFICIAL_SCORE_JSON_BEGIN\n'
+          cat score.json
+          printf '\nOFFICIAL_SCORE_JSON_END\n'
+          python3 -c "import json,math; r=json.load(open('score.json')); assert math.isclose(float(r['score']),1267/254,rel_tol=0,abs_tol=1e-12),r; print('EXACT_BASELINE_SCORE_REPRODUCED',repr(float(r['score'])))"
+          git diff --exit-code "$pin" --
+          sha256sum submission/best.heesch submission/proof.drat.xz tools/bin/drat-trim tools/bin/lrat-check tools/bin/cake_lpr
+          printf '\nOFFICIAL_UNMODIFIED_BASELINE_SUCCESS\n'
