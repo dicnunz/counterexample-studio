@@ -34,17 +34,9 @@ npm run studio -- ui --open
 
 The local UI serves at [http://127.0.0.1:4173](http://127.0.0.1:4173). For frontend development, keep that local server running and start `npm run dev` in another terminal; Vite proxies `/api` to it.
 
-## What the workflow looks like
+## Example failure
 
-1. Start with a bundled failing example to see the surface area.
-2. Compare it against the paired fixed example with the same property and deterministic seed.
-3. Export the full JSON report, or import an existing CLI report without executing any code.
-4. Inspect each property in a suite and replay the selected case with its saved seed, sampling budget, export, and shrink path.
-5. Point the CLI or browser at your own module and property file; a failed run or replay keeps the previous evidence available.
-
-## Demo Proof
-
-This is a real bundled failure from the current repo:
+The bundled `chunk-buggy` example produces:
 
 ```text
 FAIL  Chunk preserves all values
@@ -86,6 +78,14 @@ PASS  binary-search-fixed  expected=pass actual=pass seed=4881       path=n/a
 PASS  merge-ranges-buggy   expected=fail actual=fail seed=16384      path=0:1:6
 PASS  merge-ranges-fixed   expected=pass actual=pass seed=16384      path=n/a
 ```
+
+## Usage
+
+1. Run a bundled failing example.
+2. Compare it against the paired fixed example with the same property and deterministic seed.
+3. Export the full JSON report, or import an existing CLI report without executing any code.
+4. Inspect each property in a suite and replay the selected case with its saved seed, sampling budget, export, and shrink path.
+5. Point the CLI or browser at your own module and property file; a failed run or replay keeps the previous evidence available.
 
 ## CLI
 
@@ -205,8 +205,6 @@ Each family ships in buggy and fixed form so you can inspect a real failure and 
 | `merge-ranges` | touching ranges must merge into the canonical result |
 
 ## Walkthrough: `chunk-buggy`
-
-This is the sharpest first example in the repo.
 
 Run it:
 
