@@ -32,7 +32,7 @@ export function ReportSurface({ session, busy, onReplay }: {
     <div className="report-heading">
       <div>
         <div className="title-line"><h1>{entry.label}</h1><span className={`status status-${entry.status}`}>{failed ? "Failed" : "Passed"}</span></div>
-        <p className="report-subtitle">{failed ? "Counterexample found. Inspect the witness, then reproduce it." : `Passed all ${entry.numRuns} sampled runs. No counterexample found.`}</p>
+        <p className="report-subtitle">{failed ? "Counterexample found." : `Passed all ${entry.numRuns} sampled runs. No counterexample found.`}</p>
         <p className="report-origin">{session.sourceLabel} · {session.elapsedMs === null ? new Date(report.generatedAt).toLocaleString() : formatDuration(session.elapsedMs)}</p>
       </div>
       <button className="button" type="button" onClick={download}>Export JSON</button>
@@ -45,7 +45,7 @@ export function ReportSurface({ session, busy, onReplay }: {
     </dl>
     <div className="suite-strip">
       <p><strong>{report.cases.length} {report.cases.length === 1 ? "property" : "properties"}</strong><span>{report.cases.length - failures} passed · {failures} failed</span></p>
-      {report.cases.length > 1 ? <label className="case-picker"><span>Inspect property</span><select value={entry.id} onChange={(event) => setCaseId(event.currentTarget.value)}>{report.cases.map((item) => <option key={item.id} value={item.id}>{item.status === "fail" ? "FAIL" : "PASS"} — {item.label}</option>)}</select></label> : <span className="muted">{report.title}</span>}
+      {report.cases.length > 1 ? <label className="case-picker"><span>Inspect property</span><select value={entry.id} onChange={(event) => setCaseId(event.currentTarget.value)}>{report.cases.map((item) => <option key={item.id} value={item.id}>{item.status === "fail" ? "FAIL" : "PASS"} · {item.label}</option>)}</select></label> : <span className="muted">{report.title}</span>}
     </div>
     <section className="evidence-section">
       <h2>{failed ? "Counterexample" : "Invariant satisfied"}</h2>

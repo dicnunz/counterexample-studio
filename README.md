@@ -1,4 +1,4 @@
-# Property Check
+# Zeller
 
 A local property-testing workbench for pure synchronous JavaScript and TypeScript functions. It records failing inputs, seeds, shrink traces, and rerun commands in a CLI and local web interface.
 
@@ -260,3 +260,7 @@ MIT
 ## Project status
 
 AI-assisted personal project. Bundled examples and tests demonstrate a limited scope; they are not evidence of production use or independent validation.
+
+## Design
+
+The interface borrows the comparison layout and provenance margins of a laboratory specimen sheet. The name references Zeller’s [work on reducing failure-inducing inputs](https://www.debuggingbook.org/html/DeltaDebugger.html). [Natural History Museum specimen records](https://data.nhm.ac.uk/) inform the compact record structure. CLI and report formats retain their existing names.

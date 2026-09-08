@@ -100,7 +100,7 @@ export function App() {
   }
 
   return <div className="app-shell">
-    <header className="topbar"><a className="brand" href="/" aria-label="Counterexample Studio home"><span className="brand-mark" aria-hidden="true">[ ]</span><span>Counterexample Studio</span></a><div className="topbar-actions"><span className="engine-label"><span aria-hidden="true" />Local engine</span><button type="button" className="button" onClick={() => setShowImport(true)}>Import JSON</button></div></header>
+    <header className="topbar"><a className="brand" href="/" aria-label="Zeller home"><span className="brand-mark" aria-hidden="true">δ</span><span>Zeller</span></a><div className="topbar-actions"><span className="engine-label"><span aria-hidden="true" />Local engine</span><button type="button" className="button" onClick={() => setShowImport(true)}>Import JSON</button></div></header>
     <div className="workspace">
       <aside className="sidebar" aria-label="Run configuration">
         <div className="mode-switch" aria-label="Run source"><button type="button" aria-pressed={mode === "bundled"} className={mode === "bundled" ? "selected" : ""} onClick={() => setMode("bundled")}>Examples</button><button type="button" aria-pressed={mode === "local"} className={mode === "local" ? "selected" : ""} onClick={() => setMode("local")}>Local files</button></div>
@@ -112,13 +112,13 @@ export function App() {
           {mode === "bundled" && pair ? <button className="button pair-button" type="button" onClick={() => selectExample(pair.id, true, true)} disabled={busy}>Try {pair.version} version</button> : null}
         </form>
         {mode === "local" ? <details className="cli-preview"><summary>Matching CLI command</summary><CopyableCode label="Copy command" value={client.getLocalPreviewCommand({ ...localDraft, seed: Number(seed) || 0, runs: Number(runs) || 100 })} /></details> : null}
-        <div className="sidebar-footnote"><p>Synchronous JS / TS</p><p>Everything runs on your machine.</p><a href="https://github.com/dicnunz/property-check#property-config" target="_blank" rel="noreferrer">Writing a property definition <span aria-hidden="true">↗</span></a></div>
+        <div className="sidebar-footnote"><p>Synchronous JS / TS</p><a href="https://github.com/dicnunz/property-check#property-config" target="_blank" rel="noreferrer">Writing a property definition <span aria-hidden="true">↗</span></a></div>
       </aside>
       <main className="main-column" aria-busy={busy}>
         {runError ? <div className="error-banner" role="alert"><strong>Execution blocked</strong><p>{runError}</p><p>{session ? "The previous report is preserved below. Fix the issue, then retry the run or replay." : "Check your paths or local engine, then retry with the same seed."}</p><button className="button" type="button" onClick={() => setRunError("")}>Dismiss</button></div> : null}
         {notice ? <p className="notice-banner" role="status">{notice}</p> : null}
         {busy ? <p className="running-banner" role="status"><span className="spinner" aria-hidden="true" />Executing the local property engine…{session ? " Previous report shown below." : ""}</p> : null}
-        {session ? <ReportSurface key={`${session.report.generatedAt}-${session.sourceLabel}`} session={session} busy={busy} onReplay={(entry, paths) => void execute(() => client.replayCase(entry, paths), `Replay · ${entry.label}`, entry)} /> : !busy ? <div className="empty-state"><h1>Find the input that breaks your assumptions.</h1><p>Run a bundled example, point Studio at your own files, or open an existing JSON report.</p><button className="button" type="button" onClick={() => setShowImport(true)}>Import a report</button></div> : null}
+        {session ? <ReportSurface key={`${session.report.generatedAt}-${session.sourceLabel}`} session={session} busy={busy} onReplay={(entry, paths) => void execute(() => client.replayCase(entry, paths), `Replay · ${entry.label}`, entry)} /> : !busy ? <div className="empty-state"><h1>Inspect a counterexample.</h1><p>Run an example, choose local files, or import a report.</p><button className="button" type="button" onClick={() => setShowImport(true)}>Import a report</button></div> : null}
       </main>
     </div>
     {showImport ? <ImportReport onClose={() => setShowImport(false)} onImport={(report, name) => { autoRunStarted.current = true; requestId.current++; setBusy(false); setRunError(""); setNotice("Report imported. No code was executed."); setSession({ report, elapsedMs: null, sourceLabel: `Imported · ${name}`, imported: true }); }} /> : null}
