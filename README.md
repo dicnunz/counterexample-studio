@@ -1,4 +1,4 @@
-# Witness
+# Property Check
 
 A local property-testing workbench for pure synchronous JavaScript and TypeScript functions. It records failing inputs, seeds, shrink traces, and rerun commands in a CLI and local web interface.
 

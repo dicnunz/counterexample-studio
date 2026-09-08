@@ -112,7 +112,7 @@ export function App() {
           {mode === "bundled" && pair ? <button className="button pair-button" type="button" onClick={() => selectExample(pair.id, true, true)} disabled={busy}>Try {pair.version} version</button> : null}
         </form>
         {mode === "local" ? <details className="cli-preview"><summary>Matching CLI command</summary><CopyableCode label="Copy command" value={client.getLocalPreviewCommand({ ...localDraft, seed: Number(seed) || 0, runs: Number(runs) || 100 })} /></details> : null}
-        <div className="sidebar-footnote"><p>Synchronous JS / TS</p><p>Everything runs on your machine.</p><a href="https://github.com/dicnunz/witness#property-config" target="_blank" rel="noreferrer">Writing a property definition <span aria-hidden="true">↗</span></a></div>
+        <div className="sidebar-footnote"><p>Synchronous JS / TS</p><p>Everything runs on your machine.</p><a href="https://github.com/dicnunz/property-check#property-config" target="_blank" rel="noreferrer">Writing a property definition <span aria-hidden="true">↗</span></a></div>
       </aside>
       <main className="main-column" aria-busy={busy}>
         {runError ? <div className="error-banner" role="alert"><strong>Execution blocked</strong><p>{runError}</p><p>{session ? "The previous report is preserved below. Fix the issue, then retry the run or replay." : "Check your paths or local engine, then retry with the same seed."}</p><button className="button" type="button" onClick={() => setRunError("")}>Dismiss</button></div> : null}
