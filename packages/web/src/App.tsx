@@ -100,7 +100,7 @@ export function App() {
   }
 
   return <div className="app-shell">
-    <header className="topbar"><a className="brand" href="/" aria-label="Zeller home"><span className="brand-mark" aria-hidden="true">δ</span><span>Zeller</span></a><div className="topbar-actions"><span className="engine-label"><span aria-hidden="true" />Local engine</span><button type="button" className="button" onClick={() => setShowImport(true)}>Import JSON</button></div></header>
+    <header className="topbar"><a className="brand" href="/" aria-label="Property Check home"><span className="brand-mark" aria-hidden="true">δ</span><span>Property Check</span></a><div className="topbar-actions"><span className="engine-label"><span aria-hidden="true" />Local engine</span><button type="button" className="button" onClick={() => setShowImport(true)}>Import JSON</button></div></header>
     <div className="workspace">
       <aside className="sidebar" aria-label="Run configuration">
         <div className="mode-switch" aria-label="Run source"><button type="button" aria-pressed={mode === "bundled"} className={mode === "bundled" ? "selected" : ""} onClick={() => setMode("bundled")}>Examples</button><button type="button" aria-pressed={mode === "local"} className={mode === "local" ? "selected" : ""} onClick={() => setMode("local")}>Local files</button></div>

@@ -97,3 +97,15 @@ test.describe("Counterexample Studio workbench", () => {
     await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 });
+
+test('announces copied replay commands and preserves a manual fallback', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto('/');
+  const copy = page.getByRole('button', { name: 'Copy command', exact: true });
+  await copy.click();
+  await expect(page.getByText('Copied to clipboard', { exact: true })).toBeAttached();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('studio');
+  await page.evaluate(() => { Object.defineProperty(navigator.clipboard, 'writeText', { value: () => Promise.reject(new Error('denied')) }); });
+  await copy.click();
+  await expect(page.getByText('Clipboard unavailable. Select and copy the text above.')).toBeVisible();
+});

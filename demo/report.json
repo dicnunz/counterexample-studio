@@ -3,7 +3,7 @@
   "description": "Flattening chunk output should reproduce the original list without dropping the tail.",
   "modulePath": "./packages/examples/dist/modules/chunk-buggy.js",
   "propertiesPath": "./packages/examples/dist/properties/chunk.properties.js",
-  "generatedAt": "2026-09-08T22:13:03.296Z",
+  "generatedAt": "2026-09-09T23:19:33.656Z",
   "cases": [
     {
       "id": "chunk-preserves-values",

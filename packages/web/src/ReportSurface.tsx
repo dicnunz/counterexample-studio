@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CaseRunReport, SearchTraceNode, SuiteRunReport } from "@counterexample-studio/core";
 import { buildReplayCommand, formatDuration } from "./formatters";
 import { preferredCase, reportFilename, serializeReport } from "./reportIO";
@@ -108,9 +108,10 @@ function CodeFrame({ label, detail, value, tone }: { label: string; detail?: str
 
 export function CopyableCode({ label, value }: { label: string; value: string }) {
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">("idle");
+  useEffect(() => { setCopyState("idle"); }, [value]);
   async function copy() {
     try { await navigator.clipboard.writeText(value); setCopyState("copied"); }
     catch { setCopyState("error"); }
   }
-  return <div className="copyable"><pre>{value}</pre><button type="button" className="button" onClick={() => void copy()}>{copyState === "copied" ? "Copied" : label}</button>{copyState === "error" ? <p role="status" className="copy-error">Clipboard unavailable. Select and copy the text above.</p> : null}</div>;
+  return <div className="copyable"><pre>{value}</pre><button type="button" className="button" aria-label={label} onClick={() => void copy()}>{copyState === "copied" ? "Copied" : label}</button>{copyState === "copied" ? <span role="status" className="sr-only">Copied to clipboard</span> : null}{copyState === "error" ? <p role="status" className="copy-error">Clipboard unavailable. Select and copy the text above.</p> : null}</div>;
 }
