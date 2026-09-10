@@ -43,6 +43,6 @@ The web app can run local files, import/export JSON reports, inspect individual 
 npm run verify
 ```
 
-Includes the buggy/fixed example matrix and browser tests. This is an AI-assisted personal project; the bundled tests establish behavior within that scope.
+Includes the buggy/fixed example matrix and browser tests.
 
 [MIT](LICENSE)
